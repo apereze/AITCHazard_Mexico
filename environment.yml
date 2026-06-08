@@ -18,5 +18,6 @@ dependencies:
   - rasterio
   - pyproj
   - jupyterlab
+  - pytest
   - tqdm
   - pip

@@ -4,6 +4,8 @@ Article-oriented repository for a doctoral research project on AI-assisted tropi
 
 AITCHazard Mexico is being organized as a reproducible research workspace for a manuscript on tropical cyclone hazards. The current design is a four-block workflow that links retrospective AI weather forecasts, precipitation downscaling, wind hazard estimation, and final hazard index prediction for tropical cyclone cases affecting Mexico and the surrounding region.
 
+The precipitation downscaling strategy is now aligned with SwAIther-Precip as the main upstream technical reference, adapted from Switzerland to Mexico and from AIFS Single 1.0 to AIFS Single v2.
+
 ## Scientific Scope
 
 The working study design is:
@@ -11,9 +13,9 @@ The working study design is:
 - Domain: latitude `5N` to `35N`; longitude `130W` to `60W` (`230E` to `300E` in 0-360 convention).
 - Period: tropical cyclone cases from `2000` to `2025`.
 - Forecast design: 6-hour initializations, forecast horizon from `t0` to `t+72 h`, and 6-hour output frequency.
-- Block 1 target model: retrospective inference with `AIFS Single v2`.
+- Block 1 target model: retrospective inference with `AIFS Single v2` (`ecmwf/aifs-single-2.0`).
 - Block 1 target output: standardized regional NetCDF files.
-- Block 2 target: precipitation downscaling toward an MSWEP-like grid.
+- Block 2 target: SwAIther-style precipitation downscaling toward an MSWEP-like grid.
 - Main precipitation predictor for Block 2: `tp_6h`, derived from consecutive accumulated precipitation fields.
 
 ## Workflow Blocks
@@ -35,15 +37,15 @@ The working study design is:
 ```text
 docs/        Project context, methodology, data policy, and schema notes.
 paper/       Manuscript outline and publication figure workspace.
-src/         Future importable source package.
-scripts/     Future command-line utilities and workflow entry points.
+src/         Importable package utilities and tested Block 1 helpers.
+scripts/     Command-line utilities and Block 1 legacy prototypes.
 notebooks/   Future exploratory and diagnostic notebooks.
-workflows/   Future HPC, orchestration, or reproducibility workflows.
+workflows/   HPC, orchestration, or reproducibility workflows.
 data/        Local data staging area; large data are not tracked.
 outputs/     Local generated outputs; large outputs are not tracked.
 ```
 
-This first repository update is documentation-first. Placeholder directories are intentionally limited to README files until executable scientific workflows are implemented.
+The current executable code is limited to tested Block 1 post-processing helpers. The AIFS runner scripts added so far are preserved as legacy prototypes until they are refactored into a production workflow.
 
 ## Getting Started
 
@@ -56,7 +58,7 @@ conda env create -f environment.yml
 conda activate aitchazard-mexico
 ```
 
-No production pipeline is available yet. Current work should start from the documentation in `docs/` and the manuscript planning files in `paper/`.
+No production AIFS pipeline is available yet. Current work should start from the documentation in `docs/`, the manuscript planning files in `paper/`, and the tested Block 1 helpers under `src/aitchazard/block1/`.
 
 ## Data Policy
 
@@ -68,6 +70,8 @@ See `docs/data-governance.md` for the detailed policy.
 
 - `docs/project-context.md`: cleaned handoff context for the current scientific design.
 - `docs/methodology.md`: concise manuscript-aligned methodology.
+- `docs/swaither-adaptation.md`: SwAIther-Precip adaptation plan for Mexico.
+- `docs/block2-swaither-interface.md`: Block 2 input/output and variable mapping.
 - `docs/block1-netcdf-schema.md`: preliminary Block 1 output schema notes.
 - `paper/outline.md`: working article outline.
 
