@@ -1,0 +1,22 @@
+name: aitchazard-mexico
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - xarray
+  - dask
+  - netcdf4
+  - h5netcdf
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - cartopy
+  - geopandas
+  - shapely
+  - rasterio
+  - pyproj
+  - jupyterlab
+  - tqdm
+  - pip
