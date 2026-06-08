@@ -1,0 +1,61 @@
+# AITCHazard Mexico Block 2 interface sketch.
+#
+# This file documents the SwAIther-compatible names expected after adapting
+# Block 1 AIFS Single v2 outputs to the precipitation downscaling pipeline.
+
+project:
+  upstream_reference: "https://github.com/danassou/swaither-precip"
+  upstream_commit_inspected: "f225b40"
+  aifs_checkpoint: "ecmwf/aifs-single-2.0"
+  domain: "mexico"
+
+data:
+  low_res_aifs_file: "./data/block1/aifs_single_v2_mexico_inputs.nc"
+  high_res_target_file: "./data/block2/mswep_6h_mexico_target.nc"
+  static_fields_file: "./data/static/mexico_static_fields.nc"
+  stats_dir: "./data/stats"
+
+dimensions:
+  time: "time"
+  lead_time: "prediction_delta"
+  latitude: "lat"
+  longitude: "lon"
+  lead_hours: [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72]
+
+variables:
+  canonical_to_swaither:
+    tp_6h: "total_precipitation_NoNeg"
+    cp_6h: "convective_precipitation_NoNeg"
+    "10u": "wind_10m_u"
+    "10v": "wind_10m_v"
+    q_500: "specific_humidity_500hPa"
+    q_850: "specific_humidity_850hPa"
+    t_500: "temperature_500hPa"
+    t_850: "temperature_850hPa"
+    z_500: "geopotential_500hPa"
+    z_850: "geopotential_850hPa"
+  step1_input:
+    - "total_precipitation_NoNeg"
+    - "convective_precipitation_NoNeg"
+    - "wind_10m_u"
+    - "wind_10m_v"
+    - "specific_humidity_500hPa"
+    - "specific_humidity_850hPa"
+    - "temperature_500hPa"
+    - "temperature_850hPa"
+    - "geopotential_500hPa"
+    - "geopotential_850hPa"
+  step1_output: "precip6h_cumulative_capped"
+  step2_input: "precip6h_cumulative_capped"
+  step2_output: "precip6h_cumulative_capped"
+  invariant:
+    - "altitude"
+
+training:
+  split_strategy: "to_be_defined"
+  normalization: "robust_minmax_from_mexico_training_split"
+  reuse_swaither_switzerland_stats: false
+
+outputs:
+  bias_corrected_coarse: "tp_6h_bc_coarse"
+  high_resolution_precipitation: "tp_6h_hr"

@@ -4,7 +4,7 @@ This document records the confirmed Block 1 output conventions. It is preliminar
 
 ## Purpose
 
-Block 1 should produce standardized regional NetCDF files from retrospective AIFS Single v2 forecasts over the Mexico domain.
+Block 1 should produce standardized regional NetCDF files from retrospective AIFS Single v2 (`ecmwf/aifs-single-2.0`) forecasts over the Mexico domain.
 
 ## Domain
 
@@ -80,6 +80,23 @@ Derived variables should be computed during post-processing:
 - `ws10`: 10 m wind speed derived from `10u` and `10v`.
 
 The official precipitation predictor for Block 2 is `tp_6h`.
+
+## SwAIther-Compatible Aliases
+
+Block 2 may need SwAIther-style variable aliases while keeping the canonical AITCHazard names in Block 1:
+
+- `tp_6h` -> `total_precipitation_NoNeg`
+- `cp_6h` -> `convective_precipitation_NoNeg`
+- `10u` -> `wind_10m_u`
+- `10v` -> `wind_10m_v`
+- `q_500` -> `specific_humidity_500hPa`
+- `q_850` -> `specific_humidity_850hPa`
+- `t_500` -> `temperature_500hPa`
+- `t_850` -> `temperature_850hPa`
+- `z_500` -> `geopotential_500hPa`
+- `z_850` -> `geopotential_850hPa`
+
+The adapter layer should create these aliases explicitly rather than renaming Block 1's canonical variables in place.
 
 ## Open Decisions
 

@@ -8,7 +8,7 @@ The prototype files are useful because they demonstrate existing experiments wit
 
 ## Main Alignment Gaps
 
-- The current project target is AIFS Single v2, while the prototype runners use `ecmwf/aifs-ens-1.0`.
+- The current project target is AIFS Single v2 (`ecmwf/aifs-single-2.0`), while the prototype runners use `ecmwf/aifs-ens-1.0`.
 - The target forecast horizon is `t0` to `t+72 h`, while the runners default to `120 h`.
 - The target output frequency is 6-hourly; this is broadly consistent, but the scripts should expose it explicitly.
 - The target domain is Mexico (`5N-35N`, `130W-60W`), while the runners write global 0.25 degree grids.

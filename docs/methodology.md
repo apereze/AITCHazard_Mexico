@@ -8,7 +8,7 @@ The proposed workflow links AI weather forecasting, precipitation downscaling, w
 
 ## Block 1: Retrospective AIFS Forecasting
 
-Block 1 generates the meteorological backbone. For selected tropical cyclone cases from `2000-2025`, AIFS Single v2 will be run retrospectively using MARS-based atmospheric initial conditions. Forecasts are initialized every 6 hours and stored at 6-hour output intervals from `t0` to `t+72 h`.
+Block 1 generates the meteorological backbone. For selected tropical cyclone cases from `2000-2025`, AIFS Single v2 (`ecmwf/aifs-single-2.0`) will be run retrospectively using MARS-based atmospheric initial conditions. Forecasts are initialized every 6 hours and stored at 6-hour output intervals from `t0` to `t+72 h`.
 
 The output domain is Mexico and surrounding regions: `5N-35N`, `130W-60W`. Outputs should be standardized as regional NetCDF files.
 
@@ -19,12 +19,12 @@ The central post-processing requirement is to convert accumulated precipitation 
 
 ## Block 2: Precipitation Downscaling
 
-Block 2 downscales AIFS precipitation toward an MSWEP-like target grid. The preferred design is not a single direct super-resolution step. Instead, it is a two-stage framework:
+Block 2 adapts SwAIther-Precip to downscale AIFS Single v2 precipitation toward an MSWEP-like target grid over Mexico. The preferred design is not a single direct super-resolution step. Instead, it is a two-stage framework:
 
 1. Lead-time-aware coarse bias correction to reduce systematic forecast biases at the AIFS scale.
 2. Spatial super-resolution to represent finer precipitation structure on the target grid.
 
-The main precipitation predictor is `tp_6h`. The optional recommended precipitation predictor is `cp_6h`.
+The main precipitation predictor is `tp_6h`. The optional recommended precipitation predictor is `cp_6h`. SwAIther's Switzerland-specific CombiPrecip target, DHM25 topography, and AIFS Single 1.0 assumptions must be replaced with MSWEP-like precipitation, Mexico-region static fields, and AIFS Single v2 outputs.
 
 ## Block 3: Wind Hazard Estimation
 
