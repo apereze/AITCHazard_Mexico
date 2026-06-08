@@ -43,9 +43,10 @@ notebooks/   Future exploratory and diagnostic notebooks.
 workflows/   HPC, orchestration, or reproducibility workflows.
 data/        Local data staging area; large data are not tracked.
 outputs/     Local generated outputs; large outputs are not tracked.
+containers/  Apptainer definition and Curnagl/UNIL execution notes.
 ```
 
-The current executable code is limited to tested Block 1 post-processing helpers. The AIFS runner scripts added so far are preserved as legacy prototypes until they are refactored into a production workflow.
+The current executable code includes Block 1 post-processing helpers, a smoke-mode AIFS Single v2 boundary, and a SwAIther-compatible adapter. Real AIFS inference is guarded until the MARS input-state builder is implemented.
 
 ## Getting Started
 
@@ -60,6 +61,20 @@ conda activate aitchazard-mexico
 
 No production AIFS pipeline is available yet. Current work should start from the documentation in `docs/`, the manuscript planning files in `paper/`, and the tested Block 1 helpers under `src/aitchazard/block1/`.
 
+Run the current smoke path:
+
+```bash
+python scripts/block1/run_aifs_single_v2.py \
+  --config conf/aitchazard_mexico/block1_aifs_single_v2.yaml \
+  --mode smoke
+
+python scripts/block1/prepare_swaither_inputs.py \
+  --input outputs/block1_smoke.nc \
+  --output outputs/swaither_inputs_smoke.nc
+```
+
+For Curnagl/UNIL shared execution, see `containers/README.md` and `workflows/slurm/`.
+
 ## Data Policy
 
 Large raw datasets and generated scientific outputs should not be committed to this repository. This includes NetCDF, GRIB, Zarr stores, model checkpoints, large rasters, and temporary HPC products. Data provenance and regeneration steps should be documented instead.
@@ -72,6 +87,7 @@ See `docs/data-governance.md` for the detailed policy.
 - `docs/methodology.md`: concise manuscript-aligned methodology.
 - `docs/swaither-adaptation.md`: SwAIther-Precip adaptation plan for Mexico.
 - `docs/block2-swaither-interface.md`: Block 2 input/output and variable mapping.
+- `docs/aifs-single-v2-execution.md`: smoke-mode, container, credential, and real-mode guard notes.
 - `docs/block1-netcdf-schema.md`: preliminary Block 1 output schema notes.
 - `paper/outline.md`: working article outline.
 

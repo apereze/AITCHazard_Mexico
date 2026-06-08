@@ -62,3 +62,15 @@ Do not copy the complete SwAIther codebase into this repository yet. The preferr
 - Whether to train on all TC-adjacent times or broader rainy-season/background samples.
 - Which terrain/static predictors should accompany `altitude`.
 - Whether to keep SwAIther variable names internally in Block 2 or expose only AITCHazard names plus an adapter.
+
+## Current Adapter Contract
+
+The first adapter is implemented in `src/aitchazard/block1/swaither_adapter.py` and exposed through:
+
+```bash
+python scripts/block1/prepare_swaither_inputs.py \
+  --input outputs/block1_smoke.nc \
+  --output outputs/swaither_inputs_smoke.nc
+```
+
+It keeps canonical Block 1 variable names in the source NetCDF and writes a separate SwAIther-compatible file with dimensions `time`, `prediction_delta`, `lat`, and `lon`.

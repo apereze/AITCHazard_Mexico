@@ -11,6 +11,7 @@ htmlcov/
 
 # Environments
 .env
+.env.*
 .venv/
 venv/
 env/
@@ -49,8 +50,18 @@ outputs/*
 *.out
 *.err
 slurm-*.out
+logs/
 *.tmp
 tmp/
+
+# Credentials and local secrets
+.ecmwfapirc
+.cdsapirc
+.netrc
+credentials/
+secrets/
+*.pem
+*.key
 
 # OS and editor files
 .DS_Store

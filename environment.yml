@@ -17,6 +17,7 @@ dependencies:
   - shapely
   - rasterio
   - pyproj
+  - pyyaml
   - jupyterlab
   - pytest
   - tqdm

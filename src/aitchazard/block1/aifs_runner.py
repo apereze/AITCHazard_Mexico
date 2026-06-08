@@ -1,0 +1,55 @@
+"""AIFS Single v2 runner boundary.
+
+Smoke mode is implemented locally. Real mode is guarded until MARS credentials
+and production input-state retrieval are configured on Curnagl.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from aitchazard.credentials import check_credentials
+
+from .synthetic import create_synthetic_block1_dataset
+
+
+def run_smoke(config):
+    """Run the synthetic smoke path."""
+    return create_synthetic_block1_dataset(config)
+
+
+def run_real(config, *, credentials_dir: str | None = None):
+    """Guarded placeholder for real AIFS Single v2 inference."""
+    result = check_credentials(
+        profile=config.raw.get("credentials", {}).get("profile", "mars"),
+        credentials_dir=credentials_dir,
+        accepted_files=config.raw.get("credentials", {}).get("accepted_files", (".ecmwfapirc", ".cdsapirc", ".netrc")),
+        accepted_env=config.raw.get("credentials", {}).get("accepted_env", ()),
+    )
+    if not result.ok:
+        raise RuntimeError(
+            "Real mode requires MARS/ECMWF credentials mounted into the container "
+            "or provided via environment variables. " + result.summary()
+        )
+    mars_files = {".ecmwfapirc", ".cdsapirc", ".netrc"}
+    mars_env = {"ECMWF_API_URL", "ECMWF_API_KEY", "ECMWF_API_EMAIL", "CDSAPI_URL", "CDSAPI_KEY"}
+    has_mars_file = any(Path(path).name in mars_files for path in result.found_files)
+    has_mars_env = any(name in mars_env for name in result.found_env)
+    if not (has_mars_file or has_mars_env):
+        raise RuntimeError(
+            "Real mode requires a MARS/ECMWF/CDS credential handle; HF_TOKEN alone is not sufficient. "
+            + result.summary()
+        )
+
+    try:
+        from anemoi.inference.config.run import RunConfiguration  # noqa: F401
+        from anemoi.inference.runners.default import DefaultRunner  # noqa: F401
+    except ImportError as exc:
+        raise RuntimeError(
+            "Real mode requires anemoi-inference inside the AITCHazard container."
+        ) from exc
+
+    raise NotImplementedError(
+        "Real AIFS Single v2 inference is intentionally not launched yet. "
+        "The next implementation step is the MARS t-6h/t0 input-state builder."
+    )

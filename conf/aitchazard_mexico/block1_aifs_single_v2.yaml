@@ -1,0 +1,77 @@
+# Canonical Block 1 configuration for AITCHazard Mexico.
+# Smoke mode uses synthetic data and does not require credentials, GPU, MARS,
+# or network access. Real mode is guarded by credential checks.
+
+project:
+  name: "aitchazard-mexico"
+  block: "block1"
+  mode_default: "smoke"
+
+aifs:
+  checkpoint: "ecmwf/aifs-single-2.0"
+  runner: "anemoi.inference.runners.default.DefaultRunner"
+  run_configuration: "anemoi.inference.config.run.RunConfiguration"
+  device: "auto"
+  input_source: "mars"
+  input_times: ["t-6h", "t0"]
+
+domain:
+  latitude_min: 5.0
+  latitude_max: 35.0
+  longitude_min: 230.0
+  longitude_max: 300.0
+  longitude_convention: "0_360"
+
+forecast:
+  init_time: "2023-10-01T00:00:00Z"
+  initialization_frequency_hours: 6
+  output_frequency_hours: 6
+  horizon_hours: 72
+  lead_hours: [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72]
+
+variables:
+  surface:
+    - "tp_raw"
+    - "cp_raw"
+    - "10u"
+    - "10v"
+    - "msl"
+    - "sp"
+    - "2t"
+    - "2d"
+    - "skt"
+    - "sst"
+    - "tcw"
+  pressure_levels_hpa: [1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 50]
+  pressure_families: ["t", "u", "v", "z", "q"]
+  derived:
+    - "tp_6h"
+    - "cp_6h"
+    - "ws10"
+
+paths:
+  output_dir: "outputs"
+  block1_output: "outputs/block1_smoke.nc"
+  swaither_output: "outputs/swaither_inputs_smoke.nc"
+  logs_dir: "logs"
+
+smoke:
+  latitude_count: 4
+  longitude_count: 5
+  random_seed: 42
+
+credentials:
+  profile: "mars"
+  required_for_real_mode: true
+  credentials_dir_env: "AITCHAZARD_CREDENTIALS_DIR"
+  accepted_files:
+    - ".ecmwfapirc"
+    - ".cdsapirc"
+    - ".netrc"
+  accepted_env:
+    - "ECMWF_API_URL"
+    - "ECMWF_API_KEY"
+    - "ECMWF_API_EMAIL"
+    - "CDSAPI_URL"
+    - "CDSAPI_KEY"
+    - "HF_TOKEN"

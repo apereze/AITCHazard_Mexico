@@ -24,6 +24,7 @@ Do not commit:
 - Model checkpoints and weights.
 - Temporary HPC outputs, logs, and scratch files.
 - Private documents, PDFs, or local reference libraries.
+- Credential files such as `.ecmwfapirc`, `.cdsapirc`, `.netrc`, SSH keys, API tokens, or local `.env` files.
 
 ## Data Directories
 
@@ -55,3 +56,9 @@ For each dataset used in the project, document:
 ## Publication Reproducibility
 
 For article submission, the repository should contain enough documentation to reproduce the computational logic even when raw data are hosted externally or must be downloaded from controlled-access providers.
+
+## Credential Policy
+
+The shared AITCHazard container must contain dependencies and code only. Credentials remain on the host and are supplied at runtime by read-only mounts or environment variables.
+
+Allowed credential handles are documented in `containers/README.md`. Scripts may check whether handles exist, but they must not print token values or credential file contents.
