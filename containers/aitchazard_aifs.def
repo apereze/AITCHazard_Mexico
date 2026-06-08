@@ -1,0 +1,89 @@
+Bootstrap: docker
+From: pytorch/pytorch:2.4.1-cuda12.4-cudnn9-runtime
+
+%labels
+    Author AITCHazard Mexico
+    Description Shared UNIL/Curnagl container for AITCHazard AIFS Single v2 workflows
+    AIFS_Checkpoint ecmwf/aifs-single-2.0
+
+%environment
+    export AITCHAZARD_CONTAINER=1
+    export AITCHAZARD_HOME=/ws
+    export PYTHONUNBUFFERED=1
+    export PATH=/opt/conda/bin:$PATH
+
+%files
+    pyproject.toml /opt/aitchazard/pyproject.toml
+    README.md /opt/aitchazard/README.md
+    src /opt/aitchazard/src
+    conf /opt/aitchazard/conf
+    scripts /opt/aitchazard/scripts
+
+%post
+    set -eux
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        bash \
+        bzip2 \
+        ca-certificates \
+        curl \
+        git \
+        libgl1 \
+        libglib2.0-0 \
+        libgomp1 \
+        openssh-client \
+        tini
+    rm -rf /var/lib/apt/lists/*
+
+    python -m pip install --no-cache-dir --upgrade pip
+    curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj -C /usr/local/bin --strip-components=1 bin/micromamba
+    python -m pip install --no-cache-dir \
+        "anemoi-inference" \
+        "earthkit-data" \
+        "earthkit-meteo" \
+        "earthkit-regrid" \
+        "ecmwflibs" \
+        "eccodes" \
+        "xarray" \
+        "netcdf4" \
+        "h5netcdf" \
+        "zarr" \
+        "dask[complete]" \
+        "pandas" \
+        "numpy" \
+        "scipy" \
+        "pyyaml" \
+        "hydra-core" \
+        "omegaconf" \
+        "cartopy" \
+        "geopandas" \
+        "rasterio" \
+        "rioxarray" \
+        "huggingface_hub" \
+        "pytest" \
+        "tqdm" \
+        "nvidia-physicsnemo==1.2.0"
+
+    python -m pip install --no-cache-dir -e /opt/aitchazard
+    mkdir -p /ws /scratch /work
+
+%runscript
+    cd "${AITCHAZARD_HOME:-/ws}"
+    exec "$@"
+
+%test
+    python - <<'PY'
+import importlib
+
+modules = [
+    "torch",
+    "anemoi.inference",
+    "earthkit.data",
+    "xarray",
+    "physicsnemo",
+    "aitchazard",
+]
+for name in modules:
+    importlib.import_module(name)
+print("AITCHazard AIFS container dependency imports passed")
+PY

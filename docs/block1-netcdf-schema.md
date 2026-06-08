@@ -1,6 +1,6 @@
 # Preliminary Block 1 NetCDF Schema
 
-This document records the confirmed Block 1 output conventions. It is preliminary and should be refined before code implementation.
+This document records the confirmed Block 1 output conventions. It is preliminary and should be refined as the real AIFS Single v2 runner matures.
 
 ## Purpose
 
@@ -31,7 +31,7 @@ Expected dimensions:
 - `longitude`
 - `level` for pressure-level variables
 
-The exact dimension strategy should be finalized when the writer is implemented.
+The current smoke writer uses `lead_time`, `latitude`, and `longitude` as dimensions, with scalar `init_time` and lead-indexed `valid_time` coordinates.
 
 ## Surface and Near-Surface Variables
 
@@ -97,6 +97,8 @@ Block 2 may need SwAIther-style variable aliases while keeping the canonical AIT
 - `z_850` -> `geopotential_850hPa`
 
 The adapter layer should create these aliases explicitly rather than renaming Block 1's canonical variables in place.
+
+The current adapter writes a separate SwAIther-compatible file with dimensions `time`, `prediction_delta`, `lat`, and `lon`.
 
 ## Open Decisions
 
