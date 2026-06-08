@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Environments
+.env
+.venv/
+venv/
+env/
+.conda/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local data and generated outputs
+data/raw/
+data/interim/
+data/processed/
+data/external/
+outputs/*
+!outputs/README.md
+
+# Large climate, geospatial, and model artifacts
+*.nc
+*.nc4
+*.cdf
+*.grib
+*.grib2
+*.zarr
+*.zarr/
+*.tif
+*.tiff
+*.h5
+*.hdf5
+*.ckpt
+*.pt
+*.pth
+*.onnx
+
+# HPC and logs
+*.log
+*.out
+*.err
+slurm-*.out
+*.tmp
+tmp/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+.vscode/
+.idea/
