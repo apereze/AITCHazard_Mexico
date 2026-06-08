@@ -26,7 +26,7 @@ def derive_interval_precipitation(
         raise ValueError(f"{accumulated_var!r} must include dimension {time_dim!r}")
 
     accumulated = ds[accumulated_var]
-    first = accumulated.isel({time_dim: 0})
+    first = accumulated.isel({time_dim: [0]})
     differences = accumulated.diff(time_dim)
     interval = xr.concat([first, differences], dim=time_dim)
     interval = interval.assign_coords({time_dim: accumulated[time_dim]})
