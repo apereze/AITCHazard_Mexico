@@ -8,8 +8,8 @@ This document preserves the current scientific and technical decisions for the A
 
 AITCHazard Mexico is a four-block tropical cyclone hazard workflow for Mexico and the surrounding region:
 
-1. **Retrospective AIFS forecasting**: run retrospective forecasts with AIFS Single v2 for selected tropical cyclone cases.
-2. **Precipitation downscaling**: downscale coarse AIFS precipitation to a target grid compatible with MSWEP.
+1. **Retrospective AIFS forecasting**: run retrospective forecasts with AIFS Single v2 (`ecmwf/aifs-single-2.0`) for selected tropical cyclone cases.
+2. **Precipitation downscaling**: adapt the SwAIther-Precip two-stage strategy to downscale coarse AIFS precipitation to a target grid compatible with MSWEP.
 3. **Wind hazard estimation**: estimate probabilistic wind hazard from the meteorological fields generated in Block 1.
 4. **Hazard prediction**: combine hazard information to calculate a tropical cyclone hazard index for the study area.
 
@@ -28,7 +28,7 @@ AITCHazard Mexico is a four-block tropical cyclone hazard workflow for Mexico an
 
 - Block 1 is retrospective and should use a hindcast-like workflow.
 - Initial conditions should be reconstructed from MARS.
-- AIFS Single v2 is the working target checkpoint and configuration.
+- AIFS Single v2 is the working target checkpoint and configuration; the repository should not be designed around AIFS Single 1.0.
 - Block 1 official outputs should be NetCDF.
 - The atmospheric column should be vertically rich where practical.
 - The main precipitation variable for downstream use should be 6-hour interval precipitation, not only accumulated precipitation from initialization.
@@ -58,12 +58,14 @@ Expected derived variables include `tp_6h`, `cp_6h`, and `ws10`, with optional s
 
 Objective: transform coarse AIFS precipitation into a high-resolution field aligned with the target observational product.
 
-The preferred conceptual design is a two-stage architecture:
+The preferred conceptual design follows SwAIther-Precip as the upstream reference and uses a two-stage architecture:
 
 1. Lead-time-aware coarse bias correction.
 2. Spatial super-resolution.
 
 The main Block 2 precipitation predictor should be `tp_6h`; `cp_6h` is optional but recommended.
+
+For AITCHazard, the Swiss SwAIther inputs must be replaced by Mexico-domain data: Block 1 AIFS Single v2 forecasts, MSWEP-like 6-hour precipitation targets, and regional static topography/masks.
 
 ## Block 3: Wind Hazard Estimation
 
