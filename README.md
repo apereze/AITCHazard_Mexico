@@ -35,15 +35,15 @@ The working study design is:
 ```text
 docs/        Project context, methodology, data policy, and schema notes.
 paper/       Manuscript outline and publication figure workspace.
-src/         Future importable source package.
-scripts/     Future command-line utilities and workflow entry points.
+src/         Importable package utilities and tested Block 1 helpers.
+scripts/     Command-line utilities and Block 1 legacy prototypes.
 notebooks/   Future exploratory and diagnostic notebooks.
-workflows/   Future HPC, orchestration, or reproducibility workflows.
+workflows/   HPC, orchestration, or reproducibility workflows.
 data/        Local data staging area; large data are not tracked.
 outputs/     Local generated outputs; large outputs are not tracked.
 ```
 
-This first repository update is documentation-first. Placeholder directories are intentionally limited to README files until executable scientific workflows are implemented.
+The current executable code is limited to tested Block 1 post-processing helpers. The AIFS runner scripts added so far are preserved as legacy prototypes until they are refactored into a production workflow.
 
 ## Getting Started
 
@@ -56,7 +56,7 @@ conda env create -f environment.yml
 conda activate aitchazard-mexico
 ```
 
-No production pipeline is available yet. Current work should start from the documentation in `docs/` and the manuscript planning files in `paper/`.
+No production AIFS pipeline is available yet. Current work should start from the documentation in `docs/`, the manuscript planning files in `paper/`, and the tested Block 1 helpers under `src/aitchazard/block1/`.
 
 ## Data Policy
 
