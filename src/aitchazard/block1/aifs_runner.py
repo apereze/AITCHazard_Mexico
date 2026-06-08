@@ -10,6 +10,7 @@ from pathlib import Path
 
 from aitchazard.credentials import check_credentials
 
+from .state_builder import build_state_plans, write_state_manifest
 from .synthetic import create_synthetic_block1_dataset
 
 
@@ -18,7 +19,20 @@ def run_smoke(config):
     return create_synthetic_block1_dataset(config)
 
 
-def run_real(config, *, credentials_dir: str | None = None):
+def plan_real_input_states(config, *, manifest_path: str | Path | None = None) -> Path:
+    """Write the t-6h/t0 input-state manifest for real AIFS mode."""
+    return write_state_manifest(
+        build_state_plans(config),
+        Path(manifest_path) if manifest_path else config.state_manifest_path,
+    )
+
+
+def run_real(
+    config,
+    *,
+    credentials_dir: str | None = None,
+    manifest_path: str | Path | None = None,
+):
     """Guarded placeholder for real AIFS Single v2 inference."""
     result = check_credentials(
         profile=config.raw.get("credentials", {}).get("profile", "mars"),
@@ -40,6 +54,8 @@ def run_real(config, *, credentials_dir: str | None = None):
             "Real mode requires a MARS/ECMWF/CDS credential handle; HF_TOKEN alone is not sufficient. "
             + result.summary()
         )
+
+    plan_real_input_states(config, manifest_path=manifest_path)
 
     try:
         from anemoi.inference.config.run import RunConfiguration  # noqa: F401

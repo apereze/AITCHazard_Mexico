@@ -9,6 +9,7 @@ import yaml
 
 from .constants import (
     DEFAULT_FORECAST_HORIZON_HOURS,
+    DEFAULT_INITIALIZATION_FREQUENCY_HOURS,
     DEFAULT_OUTPUT_FREQUENCY_HOURS,
     MEXICO_DOMAIN,
 )
@@ -30,12 +31,35 @@ class Block1Config:
         return [int(value) for value in self.raw["forecast"]["lead_hours"]]
 
     @property
+    def init_times(self) -> list[str]:
+        forecast = self.raw["forecast"]
+        if "init_times" in forecast:
+            return [str(value) for value in forecast["init_times"]]
+        return [str(forecast["init_time"])]
+
+    @property
+    def state_lag_hours(self) -> int:
+        return int(
+            self.raw["forecast"].get(
+                "initialization_frequency_hours",
+                DEFAULT_INITIALIZATION_FREQUENCY_HOURS,
+            )
+        )
+
+    @property
     def output_path(self) -> Path:
         return Path(self.raw["paths"]["block1_output"])
 
     @property
     def swaither_output_path(self) -> Path:
         return Path(self.raw["paths"]["swaither_output"])
+
+    @property
+    def state_manifest_path(self) -> Path:
+        paths = self.raw["paths"]
+        if "state_manifest" in paths:
+            return Path(paths["state_manifest"])
+        return Path(paths.get("output_dir", "outputs")) / "block1_state_plan.json"
 
 
 def load_block1_config(path: str | Path) -> Block1Config:
@@ -82,6 +106,13 @@ def validate_block1_config(raw: dict[str, Any]) -> None:
         )
 
     forecast = raw["forecast"]
+    if "init_times" not in forecast and "init_time" not in forecast:
+        raise ValueError("forecast.init_time or forecast.init_times is required")
+    if int(forecast.get("initialization_frequency_hours", 0)) != DEFAULT_INITIALIZATION_FREQUENCY_HOURS:
+        raise ValueError(
+            "forecast.initialization_frequency_hours must be "
+            f"{DEFAULT_INITIALIZATION_FREQUENCY_HOURS}"
+        )
     if int(forecast.get("output_frequency_hours", 0)) != DEFAULT_OUTPUT_FREQUENCY_HOURS:
         raise ValueError(f"forecast.output_frequency_hours must be {DEFAULT_OUTPUT_FREQUENCY_HOURS}")
     if int(forecast.get("horizon_hours", 0)) != DEFAULT_FORECAST_HORIZON_HOURS:

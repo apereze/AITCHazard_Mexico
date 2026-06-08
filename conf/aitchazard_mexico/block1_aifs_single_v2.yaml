@@ -53,6 +53,7 @@ paths:
   output_dir: "outputs"
   block1_output: "outputs/block1_smoke.nc"
   swaither_output: "outputs/swaither_inputs_smoke.nc"
+  state_manifest: "outputs/block1_state_plan.json"
   logs_dir: "logs"
 
 smoke:
