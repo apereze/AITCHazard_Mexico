@@ -3,7 +3,7 @@ message: "If you use this repository, please cite the related manuscript or this
 title: "AITCHazard Mexico"
 type: software
 authors:
-  - family-names: "Perez Estrada"
+  - family-names: "Perez-Estrada"
     given-names: "Adolfo"
     affiliation: "Universidad Nacional Autonoma de Mexico / University of Lausanne"
 repository-code: "https://github.com/apereze/AITCHazard_Mexico"
