@@ -17,7 +17,7 @@ venv/
 env/
 .conda/
 
-# Jupyter
+# Jupyter background
 .ipynb_checkpoints/
 
 # Local data and generated outputs
