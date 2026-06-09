@@ -61,6 +61,22 @@ class Block1Config:
             return Path(paths["state_manifest"])
         return Path(paths.get("output_dir", "outputs")) / "block1_state_plan.json"
 
+    @property
+    def materialized_states_path(self) -> Path:
+        paths = self.raw["paths"]
+        if "materialized_states" in paths:
+            return Path(paths["materialized_states"])
+        return Path(paths.get("output_dir", "outputs")) / "block1_input_states.nc"
+
+    @property
+    def state_source(self) -> dict[str, Any]:
+        return dict(
+            self.raw.get(
+                "state_source",
+                {"kind": self.raw["aifs"].get("input_source", "mars")},
+            )
+        )
+
 
 def load_block1_config(path: str | Path) -> Block1Config:
     """Load and validate a Block 1 YAML configuration."""

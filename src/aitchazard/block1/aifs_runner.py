@@ -10,6 +10,7 @@ from pathlib import Path
 
 from aitchazard.credentials import check_credentials
 
+from .materializer import materialize_state_plans
 from .state_builder import build_state_plans, write_state_manifest
 from .synthetic import create_synthetic_block1_dataset
 
@@ -25,6 +26,30 @@ def plan_real_input_states(config, *, manifest_path: str | Path | None = None) -
         build_state_plans(config),
         Path(manifest_path) if manifest_path else config.state_manifest_path,
     )
+
+
+def materialize_real_input_states(
+    config,
+    *,
+    manifest_path: str | Path | None = None,
+    output_path: str | Path | None = None,
+):
+    """Write the state manifest and materialized t-6h/t0 input-state NetCDF."""
+
+    plans = build_state_plans(config)
+    manifest = write_state_manifest(
+        plans,
+        Path(manifest_path) if manifest_path else config.state_manifest_path,
+    )
+    materialized = materialize_state_plans(
+        plans,
+        config.state_source,
+        Path(output_path) if output_path else config.materialized_states_path,
+    )
+    return {
+        "manifest": manifest,
+        "materialized_states": materialized,
+    }
 
 
 def run_real(
@@ -67,5 +92,6 @@ def run_real(
 
     raise NotImplementedError(
         "Real AIFS Single v2 inference is intentionally not launched yet. "
-        "The next implementation step is the MARS t-6h/t0 input-state builder."
+        "State materialization is available through --mode materialize-states; "
+        "the next implementation step is passing those states to Anemoi."
     )

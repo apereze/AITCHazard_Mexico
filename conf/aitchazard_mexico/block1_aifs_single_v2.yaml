@@ -15,6 +15,13 @@ aifs:
   input_source: "mars"
   input_times: ["t-6h", "t0"]
 
+state_source:
+  kind: "zarr"
+  uri: "s3://nwf4ch-data/aifs-od-an-oper-0001-mars-n320-2019-2023-6h-v6.zarr"
+  storage_options:
+    anon: true
+    endpoint_url: "https://os.zhdk.cloud.switch.ch"
+
 domain:
   latitude_min: 5.0
   latitude_max: 35.0
@@ -54,6 +61,7 @@ paths:
   block1_output: "outputs/block1_smoke.nc"
   swaither_output: "outputs/swaither_inputs_smoke.nc"
   state_manifest: "outputs/block1_state_plan.json"
+  materialized_states: "outputs/block1_input_states.nc"
   logs_dir: "logs"
 
 smoke:

@@ -7,6 +7,9 @@ dependencies:
   - pandas
   - xarray
   - dask
+  - zarr
+  - fsspec
+  - s3fs
   - netcdf4
   - h5netcdf
   - scipy
