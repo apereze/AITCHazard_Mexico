@@ -106,10 +106,8 @@ data/        Local data staging area; large contents are ignored by Git.
 docs/        Project context, methodology, schemas, governance, and adaptation notes.
 notebooks/   Future exploratory notebooks; outputs should remain lightweight.
 outputs/     Local generated outputs; large/regenerable products are ignored by Git.
-paper/       Manuscript outline and publication figure workspace.
 scripts/     Command-line entry points and legacy Block 1 prototypes.
 src/         Importable `aitchazard` Python package.
-tests/       Unit and smoke tests for implemented utilities.
 workflows/   SLURM templates and workflow documentation.
 ```
 
@@ -136,121 +134,8 @@ conda env create -f environment-swaither.yml
 conda activate aitchazard-swaither
 ```
 
-## Run the Current Smoke Workflow
-
-Smoke mode uses synthetic data. It does not require GPU, MARS, network access, or credentials.
-
-Generate the canonical Block 1 smoke NetCDF:
-
-```bash
-python scripts/block1/run_aifs_single_v2.py \
-  --config conf/aitchazard_mexico/block1_aifs_single_v2.yaml \
-  --mode smoke
-```
-
-Convert the smoke output to the SwAIther-compatible interface:
-
-```bash
-python scripts/block1/prepare_swaither_inputs.py \
-  --input outputs/block1_smoke.nc \
-  --output outputs/swaither_inputs_smoke.nc
-```
-
-Expected local outputs:
-
-- `outputs/block1_smoke.nc`
-- `outputs/swaither_inputs_smoke.nc`
-
-These files are generated products and should not be committed.
-
 ## Container and Curnagl/UNIL Execution
 
-The shared container is defined in:
-
-- `containers/aitchazard_aifs.def`
-- `containers/README.md`
-
-Build with Apptainer/Singularity from the repository root:
-
-```bash
-module load gcc cuda apptainer
-apptainer build aitchazard_aifs.sif containers/aitchazard_aifs.def
-```
-
-Run tests and smoke mode inside the container:
-
-```bash
-export AITCHAZARD_REPO=/users/$USER/AITCHazard_Mexico
-export AITCHAZARD_CONTAINER=/work/$USER/containers/aitchazard_aifs.sif
-
-apptainer exec --nv \
-  -B /users,/scratch,/work \
-  -B "$AITCHAZARD_REPO:/ws" \
-  "$AITCHAZARD_CONTAINER" \
-  bash -lc "cd /ws && python -m pytest && python scripts/block1/run_aifs_single_v2.py --config conf/aitchazard_mexico/block1_aifs_single_v2.yaml --mode smoke"
-```
-
-SLURM templates:
-
-- `workflows/slurm/aifs_single_v2_smoke.slurm`
-- `workflows/slurm/aifs_single_v2_real.slurm`
-
-Required variables for the templates:
-
-- `AITCHAZARD_REPO`
-- `AITCHAZARD_CONTAINER`
-
-Mode-specific variables:
-
-- `AITCHAZARD_OUTPUT_DIR`
-- `AITCHAZARD_CONFIG`
-- `AITCHAZARD_CREDENTIALS_DIR`
-
-## Credentials
-
-Credentials are never stored in the repository and never baked into the container.
-
-Safe credential handles may be provided by read-only mounts or environment variables:
-
-- `.ecmwfapirc`
-- `.cdsapirc`
-- `.netrc`
-- `~/.config/earthkit/`
-- `ECMWF_API_URL`
-- `ECMWF_API_KEY`
-- `ECMWF_API_EMAIL`
-- `CDSAPI_URL`
-- `CDSAPI_KEY`
-- `HF_TOKEN`
-
-Check credential presence without printing secret values:
-
-```bash
-python scripts/check_credentials.py --profile mars
-```
-
-For real mode, `HF_TOKEN` alone is not enough. A MARS/ECMWF/CDS credential handle is required before the real-mode boundary will continue.
-
-## Tests and Validation
-
-Run the test suite:
-
-```bash
-python -m pytest
-```
-
-Current test coverage includes:
-
-- Block 1 constants and Mexico domain conventions;
-- `tp_6h` and `cp_6h` interval precipitation derivation;
-- `ws10` derivation from `10u` and `10v`;
-- Block 1 YAML validation for AIFS Single v2, lead times, and domain;
-- synthetic smoke dataset generation;
-- SwAIther-compatible variable and dimension mapping;
-- CLI smoke output writing and adapter conversion;
-- credential handle detection and redaction behavior.
-
-The container `%test` checks imports for `torch`, `anemoi`, `earthkit`, `xarray`, `physicsnemo`, and `aitchazard`.
 
 ## Data Governance
 
@@ -275,13 +160,11 @@ See `docs/data-governance.md` for the detailed policy.
 |---|---|
 | `docs/project-context.md` | Cleaned project context and current scientific decisions. |
 | `docs/methodology.md` | Manuscript-facing four-block methodology draft. |
-| `docs/block1-code-audit.md` | Audit of legacy Block 1 prototype scripts. |
 | `docs/block1-netcdf-schema.md` | Preliminary Block 1 NetCDF schema and derived variables. |
 | `docs/aifs-single-v2-execution.md` | Smoke mode, container, credentials, and real-mode guard notes. |
 | `docs/swaither-adaptation.md` | SwAIther-Precip adaptation plan for Mexico. |
 | `docs/block2-swaither-interface.md` | Block 2 variable and dimension contract. |
 | `docs/data-governance.md` | Data, output, and credential governance rules. |
-| `paper/outline.md` | Working article outline. |
 | `docs/references.bib` | Bibliographic references for manuscript development. |
 
 ## External References
@@ -290,19 +173,6 @@ See `docs/data-governance.md` for the detailed policy.
 - [AIFS Single v2 implementation notes](https://confluence.ecmwf.int/display/FCST/Implementation%2Bof%2BAIFS%2BSingle%2Bv2)
 - [AIFS Single v2 checkpoint on Hugging Face](https://huggingface.co/ecmwf/aifs-single-2.0)
 - [SwAIther-Precip upstream repository](https://github.com/danassou/swaither-precip)
-
-## Development Roadmap
-
-Near-term priorities:
-
-1. Build and smoke-test the Apptainer image on Curnagl/UNIL.
-2. Implement the MARS input-state builder for `t-6 h` and `t0`.
-3. Add real-mode Block 1 integration tests once credentials and permissions are available.
-4. Finalize Block 1 NetCDF naming, compression, chunking, and metadata conventions.
-5. Implement the MSWEP-like target preprocessing workflow for Block 2.
-6. Decide whether SwAIther code will remain external, become a fork, or be selectively vendored with license notices.
-7. Define Block 3 wind hazard predictors and validation metrics.
-8. Define the final Block 4 hazard index formulation.
 
 ## Contributors
 

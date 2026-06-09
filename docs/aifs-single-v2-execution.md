@@ -42,7 +42,7 @@ python scripts/check_credentials.py --profile mars
 
 ## Curnagl/UNIL Container Path
 
-The Apptainer definition is `containers/aitchazard_aifs.def`. It is designed for a shared container pattern:
+The Apptainer definition is `containers/aitchazard_aifs.def`. It is designed for a shared container pattern: -- This need to change on talk with Flavio
 
 - bind the repository into `/ws`;
 - bind `/users`, `/scratch`, and `/work`;
@@ -67,4 +67,5 @@ References:
 - Implement the MARS input-state builder for retrospective cases.
 - Decide cache layout for retrieved initial states on Curnagl.
 - Add real-mode integration tests once credentials and access permissions are available.
-- Validate container build on Curnagl modules and adjust CUDA/PyTorch versions if cluster policy requires it.
+*- Validate container build on Curnagl modules and adjust CUDA/PyTorch versions if cluster policy requires it.
+*

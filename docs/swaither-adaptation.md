@@ -52,7 +52,7 @@ Do not copy the complete SwAIther codebase into this repository yet. The preferr
 
 - Block 1 provides AIFS Single v2 retrospective forecasts and derived variables.
 - Block 2 consumes the Block 1 adapter output and trains/inferences SwAIther-style downscaling.
-- Block 3 consumes high-resolution precipitation and meteorological context for wind/hazard modeling.
+- Block 3 consumes meteorological context for wind/hazard modeling.
 - Block 4 consumes hazard fields for final tropical cyclone hazard index prediction.
 
 ## Open Implementation Questions
