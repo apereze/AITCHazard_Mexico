@@ -351,6 +351,9 @@ if not debug:
         # Get the data for the current date and the previous date
         for date in [DATE - datetime.timedelta(hours=6), DATE]:
 
+
+            ##  BUSCA LA DATA DE C.I. PARA EJECUCION 
+            
             data = ekd.from_source(
                 "mars",  # Meteorological Archival and Retrieval System instead of "ecmwf-open-data"
                 date=date,
@@ -478,9 +481,10 @@ for key in save_vars:
     data_vars[key].units = units.get(key, "unknown")
     data_vars[key].long_name = longname
 
-# %%
-for n in range(num_members):
-    for state in runner.run(input_state=input_state, lead_time=120):
+# %% 
+# LOOP PRINCIPAL
+# for n in range(num_members):
+    for state in runner.run(input_state=input_state, lead_time=72):
         for key in save_vars:
             print(
                 f"Processing member {n+1}, lead time {state['date']}, variable {key}...",
@@ -499,11 +503,15 @@ for n in range(num_members):
                 )
                 # find the index of the valid time
                 valid_time_idx = int((valid_time - initial_time_var[0]) // 6) - 1
+
+                #TRANSFORMACION DE MALLA 
                 inter_field = ekr.interpolate(
                     var_field,
                     {"grid": "N320"},
                     {"grid": (0.25, 0.25)},
                 )
+
+                ## INSERTA AQUI RECORTE DE AREA DE INTERES
 
                 data_vars[key][0, n, valid_time_idx] = inter_field.astype("f4")
                 if n == 0:
