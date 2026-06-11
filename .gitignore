@@ -70,3 +70,13 @@ desktop.ini
 ~$*
 .vscode/
 .idea/
+
+# Apptainer / Singularity container images
+
+*.sif
+*.siff
+
+# Keep container documentation and definition files
+
+!containers/README.md
+!containers/*.def
