@@ -1,6 +1,4 @@
 # Canonical Block 1 configuration for AITCHazard Mexico.
-# Smoke mode uses synthetic data and does not require credentials, GPU, MARS,
-# or network access. Real mode is guarded by credential checks.
 
 project:
   name: "aitchazard-mexico"
