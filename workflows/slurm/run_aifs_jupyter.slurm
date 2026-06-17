@@ -23,7 +23,7 @@
 #SBATCH --account=tbeucler_default
 #SBATCH --mail-user=adolfo.perezestrada@unil.ch
 #SBATCH --mail-type=NONE
-#SBATCH --time=00:09:59
+#SBATCH --time=01:29:59
 
 
 # ==============================================================================
@@ -277,15 +277,8 @@ SSH_TUNNEL_COMMAND="ssh -n -N -L ${LOCAL_PORT}:${NODE_IP}:${JUPYTER_PORT} ${LOGI
 
 echo
 echo "=============================================================================="
-echo " AIFS Single v2 Jupyter connection information"
+echo " Jupyter connection information"
 echo "=============================================================================="
-echo "Job ID:              ${SLURM_JOB_ID}"
-echo "Job name:            ${SLURM_JOB_NAME}"
-echo "Compute node:        ${COMPUTE_NODE}"
-echo "Node IP:             ${NODE_IP}"
-echo "Project directory:   ${PROJECT_DIR}"
-echo "Container:           ${CONTAINER}"
-echo "Working directory:   $(pwd)"
 echo "Jupyter node port:   ${JUPYTER_PORT}"
 echo "Local port:          ${LOCAL_PORT}"
 echo "Jupyter token:       ${JUPYTER_TOKEN}"
