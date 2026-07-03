@@ -19,7 +19,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
 #SBATCH --qos=dcsr
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu-h100
 
 # Environment
 #SBATCH --export=NONE

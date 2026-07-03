@@ -42,10 +42,9 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --gres=gpu:1
-#SBATCH --mem=16G
+#SBATCH --mem=8G
 #SBATCH --qos=dcsr
-#SBATCH --partition=gpu
+#SBATCH --partition=cpu
 
 # ==============================================================================
 # Environment
@@ -62,7 +61,7 @@ set -euo pipefail
 
 PROJECT_DIR="/work/FAC/FGSE/IDYST/tbeucler/default/apereze/repos/AITCHazard_Mexico"
 AIFS_DIR="/work/FAC/FGSE/IDYST/tbeucler/default/apereze/aifs"
-CONTAINER="${AIFS_DIR}/aifs_single_v2.sif"
+CONTAINER="${AIFS_DIR}/aifs_single_v2_era5.sif"
 LOG_DIR="${PROJECT_DIR}/logs"
 
 # Local SSH alias defined in your local ~/.ssh/config
