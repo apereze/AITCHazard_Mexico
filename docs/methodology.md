@@ -8,7 +8,7 @@ The proposed workflow links AI weather forecasting, precipitation downscaling, w
 
 ## Block 1: Retrospective AIFS Forecasting
 
-Block 1 generates the meteorological backbone. For selected tropical cyclone cases from `2000-2025`, AIFS Single v2 (`ecmwf/aifs-single-2.0`) will be run retrospectively using MARS-based atmospheric initial conditions. Forecasts are initialized every 6 hours and stored at 6-hour output intervals from `t0` to `t+72 h`.
+Block 1 generates the meteorological backbone. For selected tropical cyclone cases from `2000-2025`, AIFS Single v2 (`ecmwf/aifs-single-1.1`) will be run retrospectively using CDS/ERA5-based atmospheric initial conditions. Forecasts are initialized every 6 hours and stored at 6-hour output intervals from `t0` to `t+72 h`.
 
 The output domain is Mexico and surrounding regions: `5N-35N`, `130W-60W`. Outputs should be standardized as regional NetCDF files.
 
