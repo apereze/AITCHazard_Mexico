@@ -4,7 +4,7 @@ Article-oriented research repository for AI-assisted tropical cyclone hazard for
 
 AITCHazard Mexico is being organized as a reproducible doctoral research workspace for a manuscript on tropical cyclone hazards. The project links retrospective AI weather forecasts, precipitation downscaling, wind hazard estimation, and final hazard index prediction for tropical cyclone cases affecting Mexico and the surrounding region.
 
-The current implementation is smoke-first. It provides a clean repository structure, documented scientific interfaces, tested Block 1 utilities, a synthetic AIFS Single v2 smoke workflow, a SwAIther-compatible adapter, and a shared Apptainer/Curnagl execution plan. Real MARS/AIFS inference and Block 2 model training are intentionally staged as later implementation phases.
+The current implementation is smoke-first. It provides a clean repository structure, documented scientific interfaces, tested Block 1 utilities, a synthetic AIFS Single v2 smoke workflow, a SwAIther-compatible adapter, and a shared Apptainer/Curnagl execution plan. Real ERA5/AIFS inference and Block 2 model training are intentionally staged as later implementation phases.
 
 ## Project Status
 
@@ -12,7 +12,7 @@ The current implementation is smoke-first. It provides a clean repository struct
 |---|---|---|
 | Repository organization | Active | Article-ready documentation, package layout, configs, tests, and workflow folders are in place. |
 | Block 1 smoke mode | Implemented | Generates a deterministic synthetic NetCDF and derives `tp_6h`, `cp_6h`, and `ws10`. |
-| Block 1 real mode | Guarded placeholder | Checks credentials and Anemoi imports, then stops before real MARS retrieval. |
+| Block 1 real mode | Guarded placeholder | Checks credentials and Anemoi imports, then stops before real cds retrieval. |
 | Block 1 container | Draft implemented | Apptainer definition and Curnagl/UNIL usage notes are available under `containers/`. |
 | Block 2 SwAIther adapter | Initial implemented | Converts canonical Block 1 names/dimensions to SwAIther-style low-resolution inputs. |
 | Block 2 training/inference | Planned | Design is documented; production training code has not been added yet. |
@@ -25,14 +25,15 @@ The current implementation is smoke-first. It provides a clean repository struct
 | Study region | Mexico and surrounding tropical cyclone influence region |
 | Latitude domain | `5N` to `35N` |
 | Longitude domain | `130W` to `60W`, stored as `230E` to `300E` in 0-360 convention |
-| Study period | Tropical cyclone cases from `2000` to `2025` |
-| Forecast model | AIFS Single v2, checkpoint `ecmwf/aifs-single-2.0` |
-| Initial states | Planned MARS-based retrospective inputs at `t-6 h` and `t0` |
+| Study period | Tropical cyclone Full May-November seasons, 2000-2025 |
+| Forecast model | AIFS Single v1.1, checkpoint `ecmwf/aifs-single-1.1` |
+| Initial states | ERA5 via CDS API at `t-6 h` and `t0` `(0.25 deg -> N320)` |
 | Initialization cadence | 6-hourly |
 | Forecast horizon | `t0` to `t+72 h` |
 | Output cadence | 6-hourly |
 | Block 1 target format | Standardized regional NetCDF |
 | Main Block 2 predictor | `tp_6h` |
+| TempestExtremes domain | `-5N` to `45N`, `220E` to `310E` |
 | Optional Block 2 predictor | `cp_6h` |
 | Block 2 reference design | SwAIther-Precip adapted from Switzerland to Mexico |
 | High-resolution precipitation target | MSWEP-like 6-hour precipitation over Mexico |
@@ -53,12 +54,12 @@ flowchart LR
 
 ### Block 1: Retrospective AIFS Forecasting
 
-Block 1 generates the meteorological backbone. The production target is retrospective inference with AIFS Single v2 over selected tropical cyclone cases, initialized every 6 hours and stored from `t0` to `t+72 h`.
+Block 1 generates the meteorological backbone. The production target is retrospective inference with AIFS Single v1.1 over selected tropical cyclone cases, initialized every 6 hours and stored from `t0` to `t+72 h`.
 
 Current implementation:
 
-- canonical config: `conf/aitchazard_mexico/block1_aifs_single_v2.yaml`;
-- smoke runner: `scripts/block1/run_aifs_single_v2.py`;
+- canonical config: `conf/aitchazard_mexico/block1_aifs_single_v1_1.yaml`;
+- smoke runner: `scripts/block1/run_aifs_single_v1.py`;
 - synthetic smoke dataset: `src/aitchazard/block1/synthetic.py`;
 - NetCDF validation/writing: `src/aitchazard/block1/io.py`;
 - derived fields: `tp_6h`, `cp_6h`, and `ws10`;
@@ -168,10 +169,11 @@ See `docs/data-governance.md` for the detailed policy.
 | `docs/references.bib` | Bibliographic references for manuscript development. |
 
 ## External References
-
 - [ECMWF AIFS Machine Learning data](https://www.ecmwf.int/en/forecasts/dataset/aifs-machine-learning-data)
 - [AIFS Single v2 implementation notes](https://confluence.ecmwf.int/display/FCST/Implementation%2Bof%2BAIFS%2BSingle%2Bv2)
 - [AIFS Single v2 checkpoint on Hugging Face](https://huggingface.co/ecmwf/aifs-single-2.0)
+- [AIFS Single v1.1 checkpoint on Hugging Face](https://huggingface.co/ecmwf/aifs-single-1.1)
+- [AIFS Single 1.1.0: an update to ECMWF's machine-learned weather forecast model AIFS]( https://gmd.copernicus.org/articles/19/4703/2026/)
 - [SwAIther-Precip upstream repository](https://github.com/danassou/swaither-precip)
 
 ## Contributors

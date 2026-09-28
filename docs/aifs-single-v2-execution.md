@@ -1,4 +1,10 @@
-# AIFS Single v2 Execution
+# DEPRECATED
+
+PLEASE VIEW `docs/block1-aifs-v1_1-era5.md`
+
+
+## AIFS Single v2 Execution
+
 
 This document records the first executable Block 1 path for AITCHazard Mexico.
 
