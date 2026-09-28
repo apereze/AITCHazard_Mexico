@@ -1,4 +1,4 @@
-"""Local ERA5 initial conditions for AIFS Single v1.1 (no network access required).
+"""Local ERA5 initial conditions for AIFS Single v1.1 
 
 Replaces the per-date CDS retrieval of the prototype notebook: GRIB files are
 pre-staged monthly by scripts/block1/download_era5.py and read here.
