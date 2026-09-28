@@ -1,0 +1,50 @@
+# Block 1: AIFS Single v1.1 retrospective forecasts initialised from ERA5 (CDS).
+# Supersedes block1_aifs_single_v2.yaml (kept for reference, not used in production).
+
+model:
+  name: aifs-single-1.1
+  huggingface_repo: ecmwf/aifs-single-1.1
+  # Local copy downloaded once on a login/transfer node; never download inside a job.
+  # Verify the exact file name in the Hugging Face repository.
+  checkpoint_path: /path/to/checkpoints/aifs-single-mse-1.1.ckpt
+  device: cuda
+
+initial_conditions:
+  source: era5-cds
+  grid: [0.25, 0.25]
+  # Monthly GRIB layout: {root}/{YYYY}/{MM}/{sfc,pl,soil}.grib
+  root: data/era5
+  pressure_levels: [1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 50]
+  soil_levels: [1, 2]
+  lag_hours: 6            # AIFS needs t-6 h and t0
+
+schedule:
+  years: [2000, 2025]     # inclusive
+  months: [5, 11]         # inclusive (May-November)
+  init_frequency_hours: 6 # 00, 06, 12, 18 UTC
+  lead_time_hours: 72     # total horizon passed to runner.run(lead_time=...)
+  output_step_hours: 6    # model step, fixed by the checkpoint
+
+output:
+  root: outputs/block1/aifs_single_v1_1
+  target_grid: [0.25, 0.25]   # N320 -> regular lat-lon before cropping
+  dtype: float32
+  compression: {zlib: true, complevel: 4}
+  accumulated: [tp, cp]       # 6 h accumulations; undefined at t0
+  domains:
+    # SwAIther-Precip inputs (11 channels), self-contained file
+    regional:
+      lat: [5.0, 35.0]
+      lon: [230.0, 300.0]     # 0-360 convention
+      variables: [tp, cp, tcc, 10u, 10v, q_500, q_850, t_500, t_850, z_500, z_850]
+    # TempestExtremes inputs; >= 10 deg buffer so closed-contour tests (5.5/6.5 deg GCD)
+    # are not truncated at the regional boundaries
+    tempest:
+      lat: [-5.0, 45.0]
+      lon: [220.0, 310.0]
+      variables: [msl, 10u, 10v, z_300, z_500]
+  static:
+    # Written once per domain: zs = z_sfc / g (m), lsm (0-1)
+    variables: [zs, lsm]
+  # Block 3 candidates: decide BEFORE the production campaign
+  # optional_variables: [100u, 100v, u_200, v_200, u_850, v_850]
