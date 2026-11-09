@@ -20,7 +20,7 @@ set -euo pipefail
 module load apptainer/1.4.1
 
 BASE=/work/FAC/FGSE/IDYST/tbeucler/default/apereze
-CONTAINER="${BASE}/aifs/aifs_single_v2.sif"
+CONTAINER="${BASE}/aifs/aifs_single_v2_era5.sif"
 NB=notebooks/02_block1_benchmark_un_dia.ipynb
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK}"
 
@@ -28,7 +28,7 @@ echo "job ${SLURM_JOB_ID} en $(hostname), $(date)"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
 
 # Notebook ejecutado (con salidas) en logs/; resultados numéricos en ${BASE}/benchmarks/block1/
-srun apptainer exec --nv --bind /work "${CONTAINER}" \
+srun apptainer exec --nv --bind /work --env PYTHONPATH="${BASE}/aifs/pylibs/aifs11" "${CONTAINER}" \
     jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=-1 \
     --output-dir logs --output "02_block1_benchmark_un_dia.${SLURM_JOB_ID}.ipynb" "${NB}"
 
