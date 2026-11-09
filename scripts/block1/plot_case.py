@@ -68,7 +68,7 @@ def load_forecast(path: Path) -> dict:
     """One forecast file -> numpy arrays in plotting units."""
     import xarray as xr
 
-    with xr.open_dataset(path) as ds:
+    with xr.open_dataset(path, decode_timedelta=False) as ds:  # lead_time stays in hours
         f = {"lat": ds["latitude"].values, "lon": ds["longitude"].values,
              "lead": ds["lead_time"].values.astype(int),
              "valid": pd.to_datetime(ds["valid_time"].values),
