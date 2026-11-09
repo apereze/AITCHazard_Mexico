@@ -18,6 +18,7 @@
 
 set -euo pipefail
 module load apptainer/1.4.1
+export SLURM_EXPORT_ENV=ALL
 
 BASE=/work/FAC/FGSE/IDYST/tbeucler/default/apereze
 CONTAINER="${BASE}/aifs/aifs_single_v2_era5.sif"
