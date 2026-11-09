@@ -1,0 +1,38 @@
+# TC tracking (TCBench protocol) and wind hazard (ITCHI scheme).
+# Documentation: docs/tracking-tcbench.md, docs/hazard-itchi.md. Decisions: D10-D12, O11-O15.
+# Not yet used by code.
+
+tracking:
+  tool: TempestExtremes            # pin the commit when compiled on Curnagl
+  reference: Gomez et al. 2026, TCBench (arXiv:2601.23268); verify values in track_processing
+  input: block1 extended domain
+  fields: [msl, 10u, 10v, z_300, z_500, zs]
+  detect_nodes:
+    regional: true
+    mslp_closed_contour: {delta_pa: 200.0, distance_deg: 6.5}
+    thickness_closed_contour: {expression: "_DIFF(z_300,z_500)", delta_m2s2: -58.8, distance_deg: 5.5, max_distance_deg: 1.0}
+    wind: "_VECMAG(u10,v10)"
+  stitch_nodes:
+    min_time: 12h                  # 3 nodes at 6 h
+    vmax_min_ms: 10.0
+    max_abs_lat: 50.0
+    range_deg: to_verify
+    max_gap: to_verify
+  conditioning: systems active in IBTrACS at t0 (HuracanPy matching)
+  ibtracs: /work/FAC/FGSE/IDYST/tbeucler/default/apereze/data/ibtracs/ibtracs.NA.list.v04r01.csv   # add EP
+
+wind_hazard:
+  scheme: ITCHI (itchi-core v0.2.1 and v0.3 plan)
+  profile: Willoughby et al. 2006 (W06), per quadrant, calibrated to R34
+  outer_limit_ms: 2.0              # R_W06, Perez-Alarcon et al. 2021
+  normalisation: saffir_simpson    # exact form to confirm (O13)
+  example_levels_kt: {0: "<34", 1: "34-63", 2: "64-95", 3: ">=96"}
+  tail_cut: to_decide              # 17 kt or 12 m/s (ITCHI v0.3)
+  intensity_correction: to_decide  # O11: Gomez et al. 2025 | lead-dependent statistical | wind-pressure
+  r34_source: to_decide            # O12: AIFS 10 m wind | parametric PA21 | hybrid
+  rmw: w06_rmax_km(vmax, lat)
+
+itchi_inputs:
+  track_table: [storm_id, init_time, lead_h, time, lat, lon, vmax_kt, pmin_hpa, rmw_km,
+                R34_NE, R34_SE, R34_SW, R34_NW]
+  precipitation: P6 on the MSWEP 0.1 grid per valid time; R24 and A72 windows (A72 mixes observed MSWEP before t0, O14)

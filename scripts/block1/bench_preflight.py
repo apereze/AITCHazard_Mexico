@@ -2,7 +2,7 @@
 
 Correr en el nodo de login, dentro del contenedor (sin GPU):
     BASE=/work/FAC/FGSE/IDYST/tbeucler/default/apereze
-    apptainer exec --bind /work $BASE/aifs/aifs_single_v2.sif \
+    apptainer exec --bind /work --env PYTHONPATH=$BASE/aifs/pylibs/aifs11 $BASE/aifs/aifs_single_v2_era5.sif \
         python scripts/block1/bench_preflight.py --base $BASE --day 2005-05-15 --try-load
 """
 from __future__ import annotations

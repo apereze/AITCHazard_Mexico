@@ -1,5 +1,4 @@
 # Outputs
 
-This directory is for local generated outputs.
-
-Generated products should be reproducible from documented workflows and are ignored by Git unless explicitly lightweight and publication-ready.
+Local generated products (ignored by Git), e.g. `outputs/figures/emily_2005/` from
+`scripts/block1/plot_case.py`. Figures worth keeping go to `docs/results/figures/`.

@@ -1,61 +1,67 @@
-# AITCHazard Mexico Block 2 interface sketch.
-#
-# This file documents the SwAIther-compatible names expected after adapting
-# Block 1 AIFS Single v2 outputs to the precipitation downscaling pipeline.
+# Block 2: SwAIther-Precip adapted to Mexico. Documentation: docs/block2-swaither.md.
+# Decisions: docs/decisions.md (D8, D9, O6-O10). Not yet used by code.
 
-project:
-  upstream_reference: "https://github.com/danassou/swaither-precip"
-  upstream_commit_inspected: "f225b40"
-  aifs_checkpoint: "ecmwf/aifs-single-2.0"
-  domain: "mexico"
+upstream:
+  repository: https://github.com/danassou/swaither-precip
+  reference: https://arxiv.org/abs/2605.16163
+  physicsnemo: 1.2.0
 
-data:
-  low_res_aifs_file: "./data/block1/aifs_single_v2_mexico_inputs.nc"
-  high_res_target_file: "./data/block2/mswep_6h_mexico_target.nc"
-  static_fields_file: "./data/static/mexico_static_fields.nc"
-  stats_dir: "./data/stats"
+inputs:
+  aifs:
+    source: block1 regional domain
+    checkpoint: ecmwf/aifs-single-1.1
+    grid: [0.25, 0.25]
+    lead_hours: [6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72]   # t0 has no precipitation
+    cycles_utc: [0, 6, 12, 18]
+  target:
+    product: MSWEP V3.16 hourly aggregated to 6 h (ITCHI preprocessing, itchi-core scripts/mswep_v3_6h_accum.py)
+    window: "(T-6h, T], T in 00/06/12/18 UTC; NaN if an hour is missing"
+    grid: [0.1, 0.1]
+    domain: {lat: [5.0, 35.0], lon: [220.0, 300.0]}
+    files: /work/FAC/FGSE/IDYST/tbeucler/default/apereze/data/mswep_v3_6h/mswep_v3_6h_{YYYY}.nc   # copy from D:/MSWEP_V316_6H
+    variable: precipitation
+    units: mm per 6 h
+  static:
+    dem: INEGI Continuo de Elevaciones Mexicano 15 m (continuonacional_15m; confirm format)
+    outside_mexico_fill: to_be_decided   # O9: GMTED2010 or ERA5 orography
+    channels: [altitude]                 # optional: altitude_std
+
+stages:
+  stage1:
+    grid: [0.25, 0.25]
+    target_regrid: conservative          # 0.25 / 0.1 = 2.5, no block mean
+    model: lt_aware_FiLM_regression_bias_correction
+  stage2:
+    grid: [0.1, 0.1]
+    model: CorrDiff regression + diffusion
+    keep_if_better_than: conservative interpolation   # O6
+
+preprocessing:
+  drop_dry_times_fraction: 0.995
+  gamma_capping_p995: false              # proposal O7: keep TC extremes
 
 dimensions:
-  time: "time"
-  lead_time: "prediction_delta"
-  latitude: "lat"
-  longitude: "lon"
-  lead_hours: [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72]
+  time: time                 # valid time
+  lead_time: prediction_delta
+  latitude: lat
+  longitude: lon
 
 variables:
   canonical_to_swaither:
-    tp_6h: "total_precipitation_NoNeg"
-    cp_6h: "convective_precipitation_NoNeg"
-    "10u": "wind_10m_u"
-    "10v": "wind_10m_v"
-    q_500: "specific_humidity_500hPa"
-    q_850: "specific_humidity_850hPa"
-    t_500: "temperature_500hPa"
-    t_850: "temperature_850hPa"
-    z_500: "geopotential_500hPa"
-    z_850: "geopotential_850hPa"
-  step1_input:
-    - "total_precipitation_NoNeg"
-    - "convective_precipitation_NoNeg"
-    - "wind_10m_u"
-    - "wind_10m_v"
-    - "specific_humidity_500hPa"
-    - "specific_humidity_850hPa"
-    - "temperature_500hPa"
-    - "temperature_850hPa"
-    - "geopotential_500hPa"
-    - "geopotential_850hPa"
-  step1_output: "precip6h_cumulative_capped"
-  step2_input: "precip6h_cumulative_capped"
-  step2_output: "precip6h_cumulative_capped"
-  invariant:
-    - "altitude"
+    tp: total_precipitation_NoNeg        # m -> mm, clipped at 0
+    cp: convective_precipitation_NoNeg
+    tcc: total_cloud_cover
+    "10u": wind_10m_u
+    "10v": wind_10m_v
+    q_500: specific_humidity_500hPa
+    q_850: specific_humidity_850hPa
+    t_500: temperature_500hPa
+    t_850: temperature_850hPa
+    z_500: geopotential_500hPa
+    z_850: geopotential_850hPa
+  output: precip6h
 
 training:
-  split_strategy: "to_be_defined"
-  normalization: "robust_minmax_from_mexico_training_split"
-  reuse_swaither_switzerland_stats: false
-
-outputs:
-  bias_corrected_coarse: "tp_6h_bc_coarse"
-  high_resolution_precipitation: "tp_6h_hr"
+  split: complete years               # O8: stage 2 all years (perfect-prog); stage 1 only 2023-2025
+  normalization: robust min/max (0.5, 99.5) on the Mexican training split
+  reuse_swiss_stats: false

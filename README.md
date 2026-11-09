@@ -1,190 +1,101 @@
 # AITCHazard Mexico
 
-Article-oriented research repository for AI-assisted tropical cyclone hazard forecasting over Mexico.
+AI-based forecasting of tropical cyclone (TC) hazard over Mexico: AIFS hindcasts,
+precipitation downscaling, TC tracking, wind hazard and an integrated hazard index.
 
-AITCHazard Mexico is being organized as a reproducible doctoral research workspace for a manuscript on tropical cyclone hazards. The project links retrospective AI weather forecasts, precipitation downscaling, wind hazard estimation, and final hazard index prediction for tropical cyclone cases affecting Mexico and the surrounding region.
+AITCHazard is the forecast layer of **ITCHI** (Integrated Tropical Cyclone Hazard Index,
+[`apereze/itchi-core`](https://github.com/apereze/itchi-core)): it produces from AIFS
+forecasts the same inputs that ITCHI uses for the observed hazard, so the index can be
+computed at each lead time and compared with observations.
 
-The current implementation is smoke-first. It provides a clean repository structure, documented scientific interfaces, tested Block 1 utilities, a synthetic AIFS Single v2 smoke workflow, a SwAIther-compatible adapter, and a shared Apptainer/Curnagl execution plan. Real ERA5/AIFS inference and Block 2 model training are intentionally staged as later implementation phases.
+## Status (2026-11-08)
 
-## Project Status
-
-| Area | Status | Notes |
-|---|---|---|
-| Repository organization | Active | Article-ready documentation, package layout, configs, tests, and workflow folders are in place. |
-| Block 1 smoke mode | Implemented | Generates a deterministic synthetic NetCDF and derives `tp_6h`, `cp_6h`, and `ws10`. |
-| Block 1 real mode | Guarded placeholder | Checks credentials and Anemoi imports, then stops before real cds retrieval. |
-| Block 1 container | Draft implemented | Apptainer definition and Curnagl/UNIL usage notes are available under `containers/`. |
-| Block 2 SwAIther adapter | Initial implemented | Converts canonical Block 1 names/dimensions to SwAIther-style low-resolution inputs. |
-| Block 2 training/inference | Planned | Design is documented; production training code has not been added yet. |
-| Blocks 3 and 4 | Planned | Wind hazard and final hazard index methods remain manuscript/design tasks. |
-
-## Scientific Scope
-
-| Component | Current decision |
+| Component | Status |
 |---|---|
-| Study region | Mexico and surrounding tropical cyclone influence region |
-| Latitude domain | `5N` to `35N` |
-| Longitude domain | `130W` to `60W`, stored as `230E` to `300E` in 0-360 convention |
-| Study period | Tropical cyclone Full May-November seasons, 2000-2025 |
-| Forecast model | AIFS Single v1.1, checkpoint `ecmwf/aifs-single-1.1` |
-| Initial states | ERA5 via CDS API at `t-6 h` and `t0` `(0.25 deg -> N320)` |
-| Initialization cadence | 6-hourly |
-| Forecast horizon | `t0` to `t+72 h` |
-| Output cadence | 6-hourly |
-| Block 1 target format | Standardized regional NetCDF |
-| Main Block 2 predictor | `tp_6h` |
-| TempestExtremes domain | `-5N` to `45N`, `220E` to `310E` |
-| Optional Block 2 predictor | `cp_6h` |
-| Block 2 reference design | SwAIther-Precip adapted from Switzerland to Mexico |
-| High-resolution precipitation target | MSWEP-like 6-hour precipitation over Mexico |
+| Block 1 · AIFS Single v1.1 + ERA5 | Environment validated; one-day benchmark (12.6 s per 72 h forecast, ~80–100 GPU-h for the campaign); Emily 2005 case. Production runner pending |
+| Block 2 · SwAIther-Precip | Design decided (MSWEP V3.16 6 h, INEGI DEM); no code |
+| TC tracking · TempestExtremes + TCBench | Design decided; no code (illustrative tracker in `plot_case.py`) |
+| Blocks 3–4 · wind hazard and ITCHI | Scheme decided (follow ITCHI); intensity correction open |
+
+Details: [`docs/framework.md`](docs/framework.md) (diagram and data contracts) and
+[`docs/decisions.md`](docs/decisions.md).
 
 ## Workflow
 
 ```mermaid
 flowchart LR
-    B1["Block 1: AIFS Single v2 retrospective forecasts"] --> A1["Canonical regional NetCDF"]
-    A1 --> A2["SwAIther adapter"]
-    A2 --> B2["Block 2: precipitation downscaling"]
-    A1 --> B3["Block 3: wind hazard estimation"]
-    B2 --> B4["Block 4: final hazard index"]
+    ERA5["ERA5 (CDS)"] --> B1["Block 1: AIFS Single v1.1\n0–72 h, 4 cycles/day, 2000–2025"]
+    B1 --> REG["Regional 0.25° file"]
+    B1 --> EXT["Extended 0.25° file"]
+    REG --> B2["Block 2: SwAIther-Precip\n→ MSWEP V3.16 6 h, 0.1°"]
+    EXT --> TR["Tracking: TempestExtremes\nTCBench protocol"]
+    TR --> B3["Block 3: wind hazard\nW06, 2 m/s, Saffir-Simpson"]
+    B2 --> B4["Block 4: ITCHI per lead time"]
     B3 --> B4
 ```
 
-## Workflow Blocks
-
-### Block 1: Retrospective AIFS Forecasting
-
-Block 1 generates the meteorological backbone. The production target is retrospective inference with AIFS Single v1.1 over selected tropical cyclone cases, initialized every 6 hours and stored from `t0` to `t+72 h`.
-
-Current implementation:
-
-- canonical config: `conf/aitchazard_mexico/block1_aifs_single_v1_1.yaml`;
-- smoke runner: `scripts/block1/run_aifs_single_v1.py`;
-- synthetic smoke dataset: `src/aitchazard/block1/synthetic.py`;
-- NetCDF validation/writing: `src/aitchazard/block1/io.py`;
-- derived fields: `tp_6h`, `cp_6h`, and `ws10`;
-- guarded real-mode boundary: `src/aitchazard/block1/aifs_runner.py`.
-
-Legacy prototype scripts are preserved under `scripts/block1/legacy/` and documented in `docs/block1-code-audit.md`. They are references, not production entry points.
-
-### Block 2: SwAIther-Style Precipitation Downscaling
-
-Block 2 adapts [SwAIther-Precip](https://github.com/danassou/swaither-precip) to Mexico, AIFS Single v2, tropical cyclone cases, and an MSWEP-like precipitation target.
-
-The documented design follows two stages:
-
-1. Lead-time-aware coarse bias correction.
-2. Spatial super-resolution toward a high-resolution precipitation grid.
-
-Current implementation:
-
-- interface sketch: `conf/aitchazard_mexico/block2_swaither_mexico.yaml`;
-- variable/dimension contract: `docs/block2-swaither-interface.md`;
-- adaptation plan: `docs/swaither-adaptation.md`;
-- adapter code: `src/aitchazard/block1/swaither_adapter.py`;
-- adapter CLI: `scripts/block1/prepare_swaither_inputs.py`.
-
-The adapter writes SwAIther-compatible variables and dimensions while keeping canonical Block 1 names in the source NetCDF.
-
-### Block 3: Wind Hazard Estimation
-
-Block 3 will estimate wind hazard from Block 1 meteorological fields and tropical cyclone structure information. Candidate inputs include 10 m winds, pressure fields, atmospheric vertical structure, and storm geometry.
-
-This block is not implemented yet. Its final predictors, probabilistic formulation, and validation metrics remain open.
-
-### Block 4: Hazard Index Prediction
-
-Block 4 will combine precipitation and wind hazard information into a final tropical cyclone hazard index for the study region.
-
-This block is not implemented yet. The index definition, calibration strategy, and impact-oriented validation plan remain open.
-
-## Repository Layout
+## Repository layout
 
 ```text
-conf/        Canonical YAML configuration files for Block 1 and Block 2 interfaces.
-containers/ Apptainer definition and shared Curnagl/UNIL execution notes.
-data/        Local data staging area; large contents are ignored by Git.
-docs/        Project context, methodology, schemas, governance, and adaptation notes.
-notebooks/   Future exploratory notebooks; outputs should remain lightweight.
-outputs/     Local generated outputs; large/regenerable products are ignored by Git.
-scripts/     Command-line entry points and legacy Block 1 prototypes.
-src/         Importable `aitchazard` Python package.
-workflows/   SLURM templates and workflow documentation.
+conf/aitchazard_mexico/   YAML configuration (Block 1 in use; Block 2 and tracking/wind as design)
+containers/               Container notes (AIFS 1.1 environment)
+data/                     Local staging only (ignored by Git); campaign data live on /work
+docs/                     Framework, decisions, block documents, Curnagl guide, results
+notebooks/                02: one-day Block 1 benchmark
+outputs/                  Local outputs (ignored by Git)
+scripts/block1/           Preflight, ERA5 download, case figures
+slurm/                    SLURM jobs for Curnagl
+src/aitchazard/block1/    Calendar, ERA5 reader, CDS parameters, batched regridding
+tests/block1/             Unit tests (no network, no GPU)
 ```
 
-## Quick Start
+## Quick start on Curnagl
 
-Clone the repository:
+See [`docs/curnagl-guide.md`](docs/curnagl-guide.md) for the step-by-step version.
 
 ```bash
-git clone https://github.com/apereze/AITCHazard_Mexico.git
-cd AITCHazard_Mexico
+cd /work/FAC/FGSE/IDYST/tbeucler/default/apereze/repos/AITCHazard_Mexico
+module load apptainer/1.4.1
+BASE=/work/FAC/FGSE/IDYST/tbeucler/default/apereze
+SIF=$BASE/aifs/aifs_single_v2_era5.sif
+PYLIBS=$BASE/aifs/pylibs/aifs11
+
+# checks, checkpoint and ERA5 of one day (login node)
+apptainer exec --bind /work --env PYTHONPATH=$PYLIBS $SIF \
+    python scripts/block1/bench_preflight.py --base $BASE --day 2005-05-15 --try-load
+# one-day benchmark on a GPU
+sbatch slurm/block1_bench_day.slurm
 ```
 
-Create the lightweight development environment:
+Unit tests: `python -m pytest tests` (needs `numpy`, `scipy`, `pytest`).
 
-```bash
-conda env create -f environment.yml
-conda activate aitchazard-mexico
-```
+## Documentation
 
-For SwAIther-oriented development:
-
-```bash
-conda env create -f environment-swaither.yml
-conda activate aitchazard-swaither
-```
-
-## Container and Curnagl/UNIL Execution
-
-
-## Data Governance
-
-Large raw datasets and generated scientific outputs should not be committed to this repository.
-
-Do not commit:
-
-- NetCDF files (`*.nc`, `*.nc4`, `*.cdf`);
-- GRIB files (`*.grib`, `*.grib2`);
-- Zarr stores (`*.zarr/`);
-- model checkpoints and weights;
-- large rasters or temporary HPC outputs;
-- credentials, API tokens, `.env` files, or private local documents.
-
-Use `data/` for local staging and `outputs/` for regenerable outputs. Document provenance and regeneration steps instead of storing large products in Git.
-
-See `docs/data-governance.md` for the detailed policy.
-
-## Documentation Map
-
-| File | Purpose |
+| File | Content |
 |---|---|
-| `docs/project-context.md` | Cleaned project context and current scientific decisions. |
-| `docs/methodology.md` | Manuscript-facing four-block methodology draft. |
-| `docs/block1-netcdf-schema.md` | Preliminary Block 1 NetCDF schema and derived variables. |
-| `docs/aifs-single-v2-execution.md` | Smoke mode, container, credentials, and real-mode guard notes. |
-| `docs/swaither-adaptation.md` | SwAIther-Precip adaptation plan for Mexico. |
-| `docs/block2-swaither-interface.md` | Block 2 variable and dimension contract. |
-| `docs/data-governance.md` | Data, output, and credential governance rules. |
-| `docs/references.bib` | Bibliographic references for manuscript development. |
+| [`docs/framework.md`](docs/framework.md) | Architecture, diagram, data contracts between blocks |
+| [`docs/decisions.md`](docs/decisions.md) | Decided and open questions |
+| [`docs/block1-aifs.md`](docs/block1-aifs.md) | AIFS 1.1 + ERA5: design, environment, benchmark |
+| [`docs/block2-swaither.md`](docs/block2-swaither.md) | SwAIther-Precip adaptation (MSWEP V3.16, INEGI DEM) |
+| [`docs/tracking-tcbench.md`](docs/tracking-tcbench.md) | TempestExtremes with the TCBench protocol |
+| [`docs/hazard-itchi.md`](docs/hazard-itchi.md) | Wind hazard and forecast ITCHI |
+| [`docs/curnagl-guide.md`](docs/curnagl-guide.md) | Step-by-step commands on Curnagl |
+| [`docs/results/`](docs/results/) | Dated results (benchmark, Emily 2005) |
+| [`docs/presentations/`](docs/presentations/) | Material for progress presentations |
+| [`docs/data-governance.md`](docs/data-governance.md) | What goes into Git and what does not |
 
-## External References
-- [ECMWF AIFS Machine Learning data](https://www.ecmwf.int/en/forecasts/dataset/aifs-machine-learning-data)
-- [AIFS Single v2 implementation notes](https://confluence.ecmwf.int/display/FCST/Implementation%2Bof%2BAIFS%2BSingle%2Bv2)
-- [AIFS Single v2 checkpoint on Hugging Face](https://huggingface.co/ecmwf/aifs-single-2.0)
-- [AIFS Single v1.1 checkpoint on Hugging Face](https://huggingface.co/ecmwf/aifs-single-1.1)
-- [AIFS Single 1.1.0: an update to ECMWF's machine-learned weather forecast model AIFS]( https://gmd.copernicus.org/articles/19/4703/2026/)
-- [SwAIther-Precip upstream repository](https://github.com/danassou/swaither-precip)
+## Data governance
+
+Do not commit NetCDF, GRIB, Zarr, checkpoints, logs or credentials (`.cdsapirc`). Campaign
+data live under `/work/FAC/FGSE/IDYST/tbeucler/default/apereze/` (see `data/README.md`).
 
 ## Contributors
 
-- Adolfo Perez Estrada, Universidad Nacional Autonoma de Mexico / University of Lausanne.
+- Adolfo Pérez Estrada, Universidad Nacional Autónoma de México / University of Lausanne.
 - Milton Gomez, University of Lausanne.
-- Christian Dominguez, Universidad Nacional Autonoma de Mexico.
+- Christian Domínguez, Universidad Nacional Autónoma de México.
 - Tom Beucler, University of Lausanne.
 
 ## License
 
-This project is licensed under the MIT License. See `LICENSE.md`.
-
-If upstream SwAIther-Precip code is copied or vendored in a later phase, preserve the upstream Apache-2.0 license notices and attribution requirements.
+MIT (see `LICENSE.md`). If SwAIther-Precip code is copied, keep its Apache-2.0 notices.

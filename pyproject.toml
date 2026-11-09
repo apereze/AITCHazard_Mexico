@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aitchazard-mexico"
-version = "0.1.0"
+version = "0.2.0"
 description = "Utilities for the AITCHazard Mexico tropical cyclone hazard workflow."
 readme = "README.md"
 requires-python = ">=3.11"

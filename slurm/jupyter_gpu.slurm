@@ -1,11 +1,15 @@
 #!/bin/bash -l
 
 # ==============================================================================
-# SLURM job: AIFS Single v2 Jupyter Server
+# SLURM job: Jupyter server on a GPU node (AIFS Single v1.1 environment)
 #
 # Purpose:
-#   Start a Jupyter server inside the AIFS Single v2 Apptainer container
-#   on a GPU node in Curnagl.
+#   Start a Jupyter server inside the AIFS container on a GPU node in Curnagl.
+#   The container is aifs_single_v2_era5.sif plus the AIFS 1.1 compatible
+#   libraries in aifs/pylibs/aifs11 (see docs/block1-aifs.md, environment).
+#
+# Usage (more resources than the defaults below):
+#   sbatch --cpus-per-task=8 --mem=64G --time=02:00:00 slurm/jupyter_gpu.slurm
 #
 # Notes:
 #   - Jupyter assigns the internal port automatically.
@@ -19,7 +23,7 @@
 # Job general details
 # ==============================================================================
 
-#SBATCH --job-name=AIFS_single_v2
+#SBATCH --job-name=aifs_jupyter
 #SBATCH --account=tbeucler_default
 #SBATCH --mail-user=adolfo.perezestrada@unil.ch
 #SBATCH --mail-type=NONE
@@ -42,9 +46,10 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=8G
+#SBATCH --gres=gpu:1
+#SBATCH --mem=16G
 #SBATCH --qos=dcsr
-#SBATCH --partition=cpu
+#SBATCH --partition=gpu
 
 # ==============================================================================
 # Environment
@@ -62,6 +67,7 @@ set -euo pipefail
 PROJECT_DIR="/work/FAC/FGSE/IDYST/tbeucler/default/apereze/repos/AITCHazard_Mexico"
 AIFS_DIR="/work/FAC/FGSE/IDYST/tbeucler/default/apereze/aifs"
 CONTAINER="${AIFS_DIR}/aifs_single_v2_era5.sif"
+PYLIBS="${AIFS_DIR}/pylibs/aifs11"   # torch_geometric 2.4.0, anemoi-models 0.5.0, anemoi-inference 0.6.3
 LOG_DIR="${PROJECT_DIR}/logs"
 
 # Local SSH alias defined in your local ~/.ssh/config
@@ -125,7 +131,7 @@ fi
 
 echo
 echo "=============================================================================="
-echo " AIFS Single v2 Jupyter job"
+echo " AIFS Jupyter job"
 echo "=============================================================================="
 echo "Job ID:              ${SLURM_JOB_ID}"
 echo "Job name:            ${SLURM_JOB_NAME}"
@@ -160,7 +166,8 @@ echo
 
 srun apptainer run \
     --nv \
-    --bind "${PROJECT_DIR}:${PROJECT_DIR}" \
+    --bind /work \
+    --env PYTHONPATH="${PYLIBS}" \
     --pwd "${PROJECT_DIR}" \
     --app jup-server \
     "${CONTAINER}" \

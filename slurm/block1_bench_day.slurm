@@ -1,6 +1,8 @@
 #!/bin/bash -l
 # Benchmark de un día del bloque 1 sin interfaz: ejecuta el notebook 02 y registra sacct.
-# Uso (desde la raíz del repo): sbatch slurm/block1_bench_day.slurm
+# Uso (desde la raíz del repo):
+#   sbatch slurm/block1_bench_day.slurm                               # 2005-05-15
+#   sbatch --export=BENCH_DAY=2005-07-17 slurm/block1_bench_day.slurm  # otro día (ERA5 del día con bench_preflight.py)
 
 #SBATCH --job-name=b1_bench_day
 #SBATCH --account=tbeucler_default
