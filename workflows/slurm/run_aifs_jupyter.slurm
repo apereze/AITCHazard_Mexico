@@ -161,7 +161,7 @@ echo
 
 srun apptainer run \
     --nv \
-    --bind "${PROJECT_DIR}:${PROJECT_DIR}" \
+    --bind /work \
     --pwd "${PROJECT_DIR}" \
     --app jup-server \
     "${CONTAINER}" \
