@@ -40,16 +40,20 @@ def orient_to_regrid_convention(values: np.ndarray, lat_first: float, lon_first:
     return values
 
 
-def field_to_n320(field) -> np.ndarray:
-    """Orient an ERA5 GRIB field from its metadata and interpolate 0.25 deg -> N320."""
-    import earthkit.regrid as ekr
-
-    values = orient_to_regrid_convention(
+def orient_field(field) -> np.ndarray:
+    """ERA5 GRIB field as a (721, 1440) array in the earthkit-regrid layout."""
+    return orient_to_regrid_convention(
         field.to_numpy(),
         float(field.metadata("latitudeOfFirstGridPointInDegrees")),
         float(field.metadata("longitudeOfFirstGridPointInDegrees")),
     )
-    return ekr.interpolate(values, {"grid": (0.25, 0.25)}, {"grid": "N320"})
+
+
+def field_to_n320(field) -> np.ndarray:
+    """Orient an ERA5 GRIB field from its metadata and interpolate 0.25 deg -> N320."""
+    import earthkit.regrid as ekr
+
+    return ekr.interpolate(orient_field(field), {"grid": (0.25, 0.25)}, {"grid": "N320"})
 
 
 def era5_path(root: Path, t: dt.datetime, group: str) -> Path:
@@ -68,11 +72,13 @@ class ERA5Local:
     one cycle are reused as the t-6 h fields of the next.
     """
 
-    def __init__(self, root: Path | str, lag_h: int = 6):
+    def __init__(self, root: Path | str, lag_h: int = 6, batched: bool = True):
         self.root = Path(root)
         self.lag = dt.timedelta(hours=lag_h)
+        self.batched = batched  # one sparse product per analysis time instead of one call per field
         self._sources: dict[tuple[int, int, str], object] = {}
         self._last: dict[dt.datetime, dict[str, np.ndarray]] = {}
+        self._to_n320 = None
 
     def _source(self, t: dt.datetime, group: str):
         import earthkit.data as ekd
@@ -94,17 +100,26 @@ class ERA5Local:
         """All ERA5 fields at analysis time t, interpolated to N320."""
         if t in self._last:
             return self._last[t]
-        fields: dict[str, np.ndarray] = {}
+        names: list[str] = []
+        values: list[np.ndarray] = []
         for group in GROUPS:
             selected = self._source(t, group).sel(
                 dataDate=int(t.strftime("%Y%m%d")), dataTime=t.hour * 100
             )
             n = 0
             for f in selected:
-                fields[normalise_field_name(field=f, source=group)] = field_to_n320(f)
+                names.append(normalise_field_name(field=f, source=group))
+                values.append(orient_field(f) if self.batched else field_to_n320(f))
                 n += 1
             if n == 0:
                 raise KeyError(f"No ERA5 '{group}' fields for {t:%Y-%m-%d %H} UTC")
+        if self.batched:
+            if self._to_n320 is None:
+                from aitchazard.block1.regrid import Regridder
+
+                self._to_n320 = Regridder.from_grids("LL025", "N320")
+            values = list(self._to_n320(np.stack(values)))
+        fields = dict(zip(names, values))  # a repeated name keeps the last field, as before
         self._last = {t: fields}  # next cycle's t-6 h
         return fields
 
