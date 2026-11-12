@@ -1,4 +1,9 @@
-"""Output grid, sanity checks and NetCDF writers for Block 1 (migrated from notebook 02)."""
+"""Output grid, sanity checks and NetCDF writers for Block 1 (migrated from notebook 02).
+
+Forecast files use a CF time dimension (valid time), required by TempestExtremes;
+lead_time (forecast_period, hours) and init_time (forecast_reference_time) are coordinates.
+Readers indexing by lead time can use ds.swap_dims(time="lead_time").
+"""
 from __future__ import annotations
 
 import datetime as dt
@@ -25,6 +30,7 @@ RANGES = {
     "t_500": (200.0, 300.0), "t_850": (200.0, 330.0), "q_500": (0.0, 0.03), "q_850": (0.0, 0.04),
     "z_300": (7.0e4, 1.0e5), "z_500": (4.5e4, 6.2e4), "z_850": (8.0e3, 1.8e4),
 }
+COORD_ENC = {"latitude": {"_FillValue": None}, "longitude": {"_FillValue": None}}
 
 
 def box(dom: dict) -> tuple[slice, slice]:
@@ -75,9 +81,10 @@ def check_forecast(data: dict[str, np.ndarray]) -> dict:
     return issues
 
 
-def _atomic_netcdf(ds, path: Path, complevel: int, chunks) -> int:
+def _atomic_netcdf(ds, path: Path, complevel: int, chunks, coord_enc: dict | None = None) -> int:
     enc = {n: {"zlib": True, "complevel": complevel, "dtype": "float32", "chunksizes": chunks(ds[n])}
            for n in ds.data_vars}
+    enc.update(coord_enc or {})
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = tmp_name(path)
@@ -88,26 +95,31 @@ def _atomic_netcdf(ds, path: Path, complevel: int, chunks) -> int:
 
 def write_forecast(path: Path, data: dict, grid: OutputGrid, domain: str, t0: dt.datetime,
                    leads: np.ndarray, complevel: int = 4, attrs: dict | None = None) -> int:
-    """One forecast (lead_time, latitude, longitude) of one domain; returns bytes on disk."""
+    """One forecast (time, latitude, longitude) of one domain; returns bytes on disk."""
     import xarray as xr
 
     dom = grid.domains[domain]
     i, j = grid.sub_index(domain)
     leads = np.asarray(leads)
     t0n = np.datetime64(t0, "ns")
+    ref = f"hours since {t0:%Y-%m-%d %H:%M:%S}"
     ds = xr.Dataset(
-        {NC_NAME.get(v, v): (("lead_time", "latitude", "longitude"), data[v][:, i, j], {"units": UNITS[v]})
+        {NC_NAME.get(v, v): (("time", "latitude", "longitude"), data[v][:, i, j], {"units": UNITS[v]})
          for v in dom["variables"]},
-        coords={"lead_time": ("lead_time", leads.astype("int32"), {"units": "hours"}),
-                "valid_time": ("lead_time", t0n + leads.astype("timedelta64[h]")),
-                "init_time": t0n,
+        coords={"time": ("time", t0n + leads.astype("timedelta64[h]"), {"standard_name": "time"}),
+                "lead_time": ("time", leads.astype("int32"),
+                              {"units": "hours", "standard_name": "forecast_period"}),
+                "init_time": ((), t0n, {"standard_name": "forecast_reference_time"}),
                 "latitude": ("latitude", grid.lat[i], {"units": "degrees_north"}),
                 "longitude": ("longitude", grid.lon[j], {"units": "degrees_east"})},
         attrs={"model": "aifs-single-1.1", "initial_conditions": "ERA5 (CDS)",
-               "accumulation": "tp, cp: 6 h totals ending at valid_time; NaN at lead_time 0 (t0 from ERA5)",
+               "accumulation": "tp, cp: 6 h totals ending at time; NaN at lead_time 0 (t0 from ERA5)",
                **(attrs or {})},
     )
-    return _atomic_netcdf(ds, path, complevel, lambda da: (1, *da.shape[1:]))
+    coord_enc = {**COORD_ENC,
+                 "time": {"units": ref, "calendar": "standard", "dtype": "int32"},
+                 "init_time": {"units": ref, "calendar": "standard", "dtype": "int32"}}
+    return _atomic_netcdf(ds, path, complevel, lambda da: (1, *da.shape[1:]), coord_enc)
 
 
 def write_static(path: Path, static: dict, grid: OutputGrid, domain: str, complevel: int = 4) -> int:
@@ -117,4 +129,4 @@ def write_static(path: Path, static: dict, grid: OutputGrid, domain: str, comple
     i, j = grid.sub_index(domain)
     ds = xr.Dataset({k: (("latitude", "longitude"), v[i, j], {"units": UNITS[k]}) for k, v in static.items()},
                     coords={"latitude": grid.lat[i], "longitude": grid.lon[j]})
-    return _atomic_netcdf(ds, path, complevel, lambda da: da.shape)
+    return _atomic_netcdf(ds, path, complevel, lambda da: da.shape, COORD_ENC)

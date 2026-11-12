@@ -100,11 +100,17 @@ def test_write_forecast_roundtrip(tmp_path):
     data["tp"][0] = np.nan
     p = tmp_path / "f.nc"
     write_forecast(p, data, grid, "box", dt.datetime(2023, 5, 1, 0), leads)
-    with xr.open_dataset(p) as ds:
+    with xr.open_dataset(p, decode_timedelta=False) as ds:
         assert set(ds.data_vars) == {"tp", "u10"}
-        assert ds.tp.dims == ("lead_time", "latitude", "longitude")
-        assert ds.valid_time.values[-1] == np.datetime64("2023-05-04T00:00", "ns")
+        assert ds.tp.dims == ("time", "latitude", "longitude")  # TempestExtremes needs 'time'
+        assert ds.time.values[-1] == np.datetime64("2023-05-04T00:00", "ns")
+        assert list(ds.lead_time.values) == list(leads)
         np.testing.assert_array_equal(ds.tp.values[1:], data["tp"][1:])
+    with xr.open_dataset(p, decode_times=False, decode_timedelta=False) as raw:
+        assert raw.time.attrs["units"].startswith("hours since 2023-05-01")  # xarray may drop 00:00:00
+        assert raw.time.attrs["calendar"] == "standard"
+        assert raw.time.values[-1] == 72
+        assert "_FillValue" not in raw.latitude.encoding
     assert not list(tmp_path.glob("*.tmp*"))
 
 
