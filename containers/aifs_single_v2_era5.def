@@ -1,0 +1,68 @@
+Bootstrap: localimage
+From: /work/FAC/FGSE/IDYST/tbeucler/default/dawn_containers/AIFS/aifs-ens.sif
+
+
+%environment
+    export DEBIAN_FRONTEND=noninteractive
+
+
+%files
+
+
+%post
+    apt-get update
+
+    DEBIAN_FRONTEND=noninteractive apt -yq install \
+        sshfs \
+        less
+
+    # Install uv directly in /usr/bin
+    curl -LsSf https://astral.sh/uv/install.sh | \
+        env -i XDG_BIN_HOME=/usr/bin \
+        bash --noprofile --norc -l -s -- -q --no-modify-path
+
+    uv pip install --system --no-cache \
+        numpy==1.26.4 \
+        notebook \
+        jax[cuda] \
+        dm-haiku \
+        flax \
+        grain \
+        ecmwf-api-client \
+        dask[distributed] \
+        bokeh \
+        anemoi-inference[huggingface]==0.8.3 \
+        anemoi-models==0.9.3 \
+        anemoi-utils==0.4.35.post3 \
+        torch==2.7.0 \
+        torch-geometric==2.6.1 \
+        earthkit-regrid==0.5.1 \
+        ecmwf-opendata==0.3.29 \
+        'earthkit-data<1.0.0' \
+	cdsapi \
+        cfgrib \
+        eccodes \
+        xarray \
+        netcdf4
+
+
+    uv pip install --system --no-cache --no-build-isolation \
+        --reinstall-package flash-attn \
+        flash-attn==2.7.4.post1
+
+
+%apprun jup-server
+    PORT=$(python3 -c "import socket; s=socket.socket(); s.bind(('',0)); print(s.getsockname()[1]); s.close()")
+
+    echo "Port used: ${PORT}"
+
+    jupyter notebook \
+        --ip=$(hostname -I | awk '{print $1}') \
+        --port=${PORT} \
+        --no-browser \
+        --port-retries=0 \
+        --notebook-dir=$(realpath .)
+
+
+%apprun jup-setup
+    jupyter notebook password
