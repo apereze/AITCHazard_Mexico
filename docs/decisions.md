@@ -39,3 +39,53 @@ Last updated: 2026-11-08. One line per decision; the rationale is in the block d
 | O14 | 4 | Antecedent window A72 mixes observed MSWEP (before t0) and forecast (after t0) | Tutor | Block 4 |
 | O15 | Tracking | Genesis inside the 72 h window; spurious minima over high terrain at landfall | Milton | Tracking evaluation |
 | O16 | 1 | Subset with operational initial conditions to measure the ERA5 → operational shift | Tom | Optional |
+
+## Decisions of 2026-11-12 (Block 1 production)
+
+**D13. Forecast file format: CF `time` dimension.** Forecast files are
+`(time, latitude, longitude)`; `time` is the valid time encoded as `hours since <t0>`
+(calendar `standard`, int32). `lead_time` (hours, `standard_name = forecast_period`) is a
+coordinate along `time` and `init_time` a scalar coordinate (`forecast_reference_time`).
+`latitude` and `longitude` carry no `_FillValue`. Reason: TempestExtremes `DetectNodes`
+stops with *Dimension "time" or equivalent not found* on `lead_time` files (tested
+2026-11-12 on the Emily benchmark); the converted file is read and Emily is detected at all
+13 times. Readers that index by lead time use `ds.swap_dims(time="lead_time")`.
+Implemented in `src/aitchazard/block1/output.py` (commit ce0cad0).
+
+**D14. TempestExtremes build.** Commit `cafb070` (master, 2026-11-11), built on Curnagl with
+`gcc/11.5.0`, `cmake/3.31.9`, `netcdf-c/4.9.3`, `-DENABLE_MPI=OFF`,
+`-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON` (the Spack `netcdf-c` module does not set
+`LD_LIBRARY_PATH`; without the RPATH the installed binaries fail to find `libnetcdf.so.22`).
+Executables: `$BASE/software/tempestextremes/bin`. Pending: compare with the version used by
+Gomez et al. 2026 (TCBench).
+
+**D15. Production runner.** `scripts/block1/run_aifs_month.py` runs one (year, month) array
+task (`slurm/block1_campaign.slurm`; task 161 = 2023-05). Output
+`outputs/block1/{domain}/{YYYY}/{MM}/aifs11_{domain}_{YYYYMMDDHH}.nc` plus
+`outputs/block1/{domain}/static_{domain}.nc`; forecasts with files for every domain are
+skipped; atomic writes; manifest `outputs/block1/manifests/YYYY-MM.json` rewritten after each
+forecast and on SIGTERM (status, counts, failures, NaN/range issues, timings, commit, versions).
+
+**D16. Campaign environment.** The campaign keeps `aifs_single_v2_era5.sif` plus the
+`PYTHONPATH` overlay used in the benchmark, so timings and Emily results stay comparable.
+`containers/aifs_single_v1_1.def` documents the equivalent single image (overlay packages
+installed with `--no-deps`); it is built after the campaign. The image chain starts from
+`dawn_containers/AIFS/aifs-ens.sif`, outside this project: checksums are recorded in
+`containers/README.md` and a copy of the v2_era5 image is kept with the campaign outputs.
+
+### Notes for open questions (2026-11-12)
+
+- **O1 / O5, ERA5 throughput.** May 2023 (sfc 3.4 GB, pl 19 GB, soil 1.0 GB) took about
+  55 min from the CDS, about 45 min of it for pressure levels. Sequentially, 182 months need
+  about 170 h of downloads against about 80 GPU hours: the CDS, not the GPU, sets the campaign
+  pace unless downloads run ahead or in parallel.
+- **O2, output size.** Smoke test (2023-05-01 00 and 06 UTC): 12 MB regional + 11 MB tempest
+  per forecast, i.e. 0.51 TB for 22 256 forecasts with `split`, as estimated in the benchmark.
+- **O3, eastern edge.** `DetectNodes` on the Emily file returns spurious candidates on the
+  domain boundary (e.g. 44.75 N). Proposal: restrict candidates with
+  `--minlat/--maxlat/--minlon/--maxlon` to at least 6.5 deg (the largest closed-contour
+  radius) inside the stored domain. With -5-45 N, 220-310 E this keeps the regional domain
+  plus a margin.
+- **Resources.** Smoke test with `--cpus-per-task=2 --mem=16G`: 13.1 s per forecast after the
+  first (53.8 s, includes lazy checkpoint load, CUDA initialisation and the first scan of the
+  monthly GRIB), RSS peak 5.6 GiB, VRAM peak 20.7 GiB. Final values from the 2023-05 pilot.

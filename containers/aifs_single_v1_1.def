@@ -1,0 +1,23 @@
+Bootstrap: localimage
+From: /work/FAC/FGSE/IDYST/tbeucler/default/apereze/aifs/aifs_single_v2_era5.sif
+
+# AIFS Single v1.1 environment: the v2_era5 image with the three packages the 1.1
+# checkpoint needs, installed in place instead of the PYTHONPATH overlay
+# ($BASE/aifs/pylibs/aifs11). Same package set as containers/aifs11_overlay.freeze.txt.
+# Not used by the Block 1 campaign (docs/decisions.md D16); build after it:
+#   apptainer build aifs_single_v1_1.sif containers/aifs_single_v1_1.def
+# Image chain: dawn_containers/AIFS/aifs-ens.sif -> aifs_single_v2_era5.sif -> this image
+# (checksums in containers/README.md).
+
+%post
+    # --no-deps: the overlay holds exactly these three packages
+    uv pip install --system --no-cache --no-deps \
+        anemoi-inference==0.6.3 \
+        anemoi-models==0.5.0 \
+        torch-geometric==2.4.0
+
+%test
+    python -c "from importlib.metadata import version as v; print({p: v(p) for p in ('anemoi-inference', 'anemoi-models', 'torch_geometric')})"
+
+%labels
+    Description AIFS Single v1.1 inference environment (AITCHazard Block 1)
