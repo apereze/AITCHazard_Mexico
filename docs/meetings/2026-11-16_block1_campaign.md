@@ -188,7 +188,37 @@ use: P6 and track comparison on the 2024-2025 validation and test years.
   initialised from ERA5 (O11); tracking reason for 330 E (O3); genesis inside the 72 h
   window and spurious minima over the Sierra Madre (O15).
 
-## Results added 2026-11-15 (to fill)
+## Results added 2026-11-15
 
-- TempestExtremes on May 2023 (124 forecasts, quiet month): TODO.
-- Time-window check AIFS tp vs MSWEP 6 h (lag correlation): TODO.
+**Tracking, negative and positive controls** (`scripts/tracking/te_month.sh`, TCBench
+parameters, candidates >= 6.5 deg inside the domain; `--range 5`, `--maxgap 0` and the
+10 m/s wind threshold still to check against the TCBench code).
+
+- May 2023 (124 forecasts, no TC in IBTrACS NA/EP): 14 `DetectNodes` candidates, 0 tracks,
+  so 0 false alarms. Candidates: one at the latitude limit (6 May); a 1007-1008 hPa low near
+  24.5 N, 71.5 W (21-22 May) and a 1004 hPa low near 31.5 N, 79.5 W (27-28 May), each lasting
+  at most 2 nodes per forecast, so removed by the 3-node minimum.
+- Arlene 2023 (disturbance from 31 May 18 UTC, tropical from 1 June 12 UTC, Gulf of Mexico):
+  no candidate in the forecasts of 30-31 May. Not a miss under the TCBench protocol (not
+  active at t0), but a genesis inside the 72 h window that AIFS did not produce (O15).
+- Emily 2005 (init 17 July 00 UTC), same options: Emily tracked at all 13 times (Pmin 971 hPa,
+  maximum 10 m wind 22-30 m/s on the 0.25 grid) and Eugene from 18 July 18 UTC (6 nodes,
+  1002-1006 hPa). IBTrACS has Eugene at 15.9 N, 105.0 W, 35 kt at that time (first fix 18 July
+  06 UTC): a genesis inside the window that AIFS did produce (O15).
+
+**TC cases per season** (`scripts/tracking/ibtracs_counts.py`; NA + EP systems with at least
+one fix in 5-35 N, 130-60 W, May-November):
+
+| | Systems | Reaching 34 kt in the domain |
+|---|---|---|
+| Mean 2000-2022 | 30.3 | 26.7 |
+| 2023 | 29 | 24 |
+| 2024 | 27 | 26 |
+| 2025 | 28 | 28 |
+
+The validation (2023-2024) and test (2025) seasons are ordinary: about 56 and 28 systems.
+Enough for SwAIther (trained on fields), short for the wind model, where the independent
+unit is the storm (feature selection, D17). Systems affecting Mexico are fewer; count by
+distance to the coast if needed.
+
+- Time-window check AIFS tp vs MSWEP 6 h (lag correlation): pending.
