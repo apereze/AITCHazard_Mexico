@@ -22,12 +22,12 @@ Measured (A100 40 GB, 2 CPUs, 16 GB):
 | RSS peak / VRAM peak | 5.7 GiB / 20.7 GiB |
 | Output per month (`split`) | 2.7 GB -> 0.49 TB for 182 months |
 | ERA5 per month | 23.4 GB (pl 19, sfc 3.4, soil 1.0) -> 4.4 TB for 182 months |
-| ERA5 download per month | about 55 min (pl about 45 min) |
+| ERA5 download per month | 33 min mean, 25-47 min (pl 17-41 min); June-November 2023, measured 2026-11-12 |
 | GPU time, full campaign | about 84 h including per-task overhead |
 | Project quota (`/work`) | 107 of 342 TB used; 8.18 M of 8.99 M files (91 %) |
 
-The CDS, not the GPU, sets the pace: about 170 h of sequential downloads against about
-84 GPU hours. Downloads must run ahead of the GPU tasks, and in parallel if the CDS allows it.
+The CDS, not the GPU, sets the pace: about 100 h of sequential downloads (about 145 h at the
+slowest measured month) against about 84 GPU hours. Downloads must run ahead of the GPU tasks, and in parallel if the CDS allows it.
 
 ## Decisions needed
 
@@ -39,8 +39,8 @@ The CDS, not the GPU, sets the pace: about 170 h of sequential downloads against
 | O4 | Extra variables for Block 3 | u, v at 200 and 850 hPa and 100u, 100v on the tempest domain | Tom, Milton |
 | O5 | Keep or delete ERA5 GRIB | Keep (quota allows it) | Adolfo, Tom |
 
-**O1.** 2023-2025 is 21 tasks, 2 568 forecasts, about 10 GPU hours and about 19 h of
-downloads. It covers storms relevant for Mexico (e.g. Otis 2023, Beryl and John 2024) and
+**O1.** 2023-2025 is 21 tasks, 2 568 forecasts, about 10 GPU hours; ERA5 for May-November 2023 is
+already on Curnagl, and 2024-2025 needs about 8 h of downloads. It covers storms relevant for Mexico (e.g. Otis 2023, Beryl and John 2024) and
 lets tracking, the wind model and ITCHI run end to end before the remaining GPU hours are
 spent. Question for Tom: whether 2000-2022 overlaps the AIFS v1.1 training period, since
 in-sample hindcasts would bias the comparison with observed ITCHI.
@@ -66,7 +66,7 @@ for hazard. Rough cost from the tempest file: about 0.05 TB per extra field, abo
 six (upper-level winds compress worse; up to about 1.5 times that).
 
 **O5.** The project has 234 TB free, so the 4.4 TB of ERA5 can be kept; deleting it would
-make any rerun (an O4 change, O16) cost about 170 h of downloads again. The binding limit is
+make any rerun (an O4 change, O16) cost about 100 h of downloads again. The binding limit is
 the number of files: the group uses 91 % of its file quota. The campaign adds about 45 000
 files (about 5 % of the remaining margin), but if the quota is reached by anyone in the group,
 writes fail for everyone during the campaign. To discuss with Tom.

@@ -112,11 +112,14 @@ def run_forecasts(cfg: dict, todo: list, domains: dict, man: dict, mpath: Path) 
     man["gpu"] = torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
     t = time.perf_counter()
     runner = SimpleRunner(cfg["model"]["checkpoint_path"], device=cfg["model"]["device"])
-    man["timing"]["load_checkpoint_s"] = round(time.perf_counter() - t, 1)
+    # SimpleRunner loads the checkpoint lazily: this is only the constructor; the load
+    # itself falls in the first forecast of the task (first_forecast_s below).
+    man["timing"]["runner_init_s"] = round(time.perf_counter() - t, 1)
     era5 = ERA5Local(ic["root"], lag_h=ic["lag_hours"])  # chronological order reuses t0 as next t-6 h
     attrs = {"git_commit": man["git_commit"] or "unknown"}
     static_done = all(static_path(out_root, d).exists() for d in domains)
     consecutive = 0
+    first_done = False
 
     for t0 in todo:
         rec = {"init": t0.isoformat()}
@@ -156,6 +159,9 @@ def run_forecasts(cfg: dict, todo: list, domains: dict, man: dict, mpath: Path) 
                        write_s=round(w3 - w2, 2), total_s=round(w3 - w0, 2))
             man["forecasts"].append(rec)
             man["written"] += 1
+            if not first_done:  # includes the lazy checkpoint load and CUDA warm-up
+                man["timing"]["first_forecast_s"] = rec["forecast_s"]
+                first_done = True
             if issues:
                 man["issues"][rec["init"]] = issues
             consecutive = 0

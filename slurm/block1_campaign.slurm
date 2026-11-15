@@ -15,7 +15,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=16G
-#SBATCH --time=02:00:00
+#SBATCH --time=01:00:00   # pilot 2023-05: 27 min for 31 days
 #SBATCH --array=0-181%4
 #SBATCH --chdir=/work/FAC/FGSE/IDYST/tbeucler/default/apereze/repos/AITCHazard_Mexico
 #SBATCH --output=/work/FAC/FGSE/IDYST/tbeucler/default/apereze/repos/AITCHazard_Mexico/logs/b1_aifs-%A_%a.log
