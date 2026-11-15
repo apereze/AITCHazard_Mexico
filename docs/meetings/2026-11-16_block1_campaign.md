@@ -30,7 +30,7 @@ Measured (A100 40 GB, 2 CPUs, 16 GB):
 
 | Quantity | Value |
 |---|---|
-| Time per forecast | 12.95 s median; first forecast of a task about 50 s (lazy checkpoint load) |
+| Time per forecast | 12.7-12.95 s median; first forecast of a task 21-32 s (lazy checkpoint load), measured on the June-November 2023 tasks |
 | Wall time per month task | 27 min (31 days) -> `--time=01:00:00` |
 | RSS peak / VRAM peak | 5.7 GiB / 20.7 GiB |
 | Output per month (`split`) | 2.7 GB -> 0.49 TB for 182 months |
@@ -189,6 +189,11 @@ use: P6 and track comparison on the 2024-2025 validation and test years.
   window and spurious minima over the Sierra Madre (O15).
 
 ## Results added 2026-11-15
+
+**Block 1, June-November 2023** (job 20578049, tasks 162-167): 732 forecasts, 0 failures,
+0 NaN or range issues, 26.4-27.9 min per task, median 12.7-12.9 s per forecast, first forecast
+21-32 s (`first_forecast_s`; `runner_init_s` = 0.0 confirms the lazy checkpoint load). With
+May, the whole 2023 season (856 forecasts) is on Curnagl.
 
 **Tracking, negative and positive controls** (`scripts/tracking/te_month.sh`, TCBench
 parameters, candidates >= 6.5 deg inside the domain; `--range 5`, `--maxgap 0` and the

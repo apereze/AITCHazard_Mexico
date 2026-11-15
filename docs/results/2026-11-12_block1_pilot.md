@@ -10,7 +10,7 @@ Context: `docs/meetings/2026-11-16_block1_campaign.md`, decisions D13-D16 in `do
 | Forecasts | 124/124 written (00/06/12/18 UTC, 1-31 May 2023), 0 failed, 0 NaN or range issues |
 | Files | 248 (regional + tempest per initialisation), 2.7 GB |
 | Wall time | 27 min |
-| Time per forecast | 12.95 s median; first forecast of the task about 50 s |
+| Time per forecast | 12.95 s median; first forecast 21-32 s (measured on the June-November 2023 tasks, 2026-11-15) |
 | Peak RSS / peak reserved VRAM | 5.7 GiB / 20.7 GiB (A100 40 GB, 2 CPUs, 16 GB requested) |
 | Resume | the task resumed correctly after a 2-forecast smoke test |
 
