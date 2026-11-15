@@ -29,7 +29,7 @@ print(f"{len(files)} AIFS files | MSWEP {dict(msw.sizes)} | units: {msw.attrs.ge
 
 aifs = {L: [] for L in LEADS}
 for f in files:
-    with xr.open_dataset(f) as ds:
+    with xr.open_dataset(f, decode_timedelta=False) as ds:  # lead_time as int hours
         ds = std_coords(ds)
         for L in LEADS:
             i = int(np.flatnonzero(ds.lead_time.values == L)[0])
