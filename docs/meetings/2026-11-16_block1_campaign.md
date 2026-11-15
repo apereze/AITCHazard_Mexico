@@ -226,4 +226,15 @@ Enough for SwAIther (trained on fields), short for the wind model, where the ind
 unit is the storm (feature selection, D17). Systems affecting Mexico are fewer; count by
 distance to the coast if needed.
 
-- Time-window check AIFS tp vs MSWEP 6 h (lag correlation): pending.
+**Precipitation window** (`scripts/block2/check_tp_window.py`, May 2023, 124 forecasts;
+MSWEP 0.1 smoothed 3 x 3 and taken at the nearest 0.25 point). Mean pattern correlation of
+AIFS tp with MSWEP valid at T + k:
+
+| Lead | T-12 h | T-6 h | T | T+6 h | T+12 h |
+|---|---|---|---|---|---|
+| 6 h | 0.22 | 0.38 | **0.53** | 0.34 | 0.19 |
+| 24 h | 0.27 | 0.40 | **0.51** | 0.39 | 0.25 |
+
+The peak is at T for both leads: AIFS tp at T is the total of (T-6 h, T], as in MSWEP, so no
+shift is needed in the converter. Domain-mean AIFS precipitation is about 5 % below MSWEP
+(0.77 against 0.81 mm per 6 h at +6 h; 0.80 against 0.84 at +24 h).
