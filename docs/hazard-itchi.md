@@ -39,9 +39,11 @@ Scheme:
 2. Outer limit R_W06 = radius where the profile reaches **2 m/s** (`V_OUTER_PA21_MS = 2.0`).
 3. Hazard normalised to **Saffir-Simpson categories** of the local wind (ITCHI v0.3, P4).
    Example with four levels from the v0.3 plan: 0 below 34 kt; 1 tropical storm (34–63 kt);
-   2 categories 1–2 (64–95 kt); 3 major hurricane (≥ 96 kt). The v0.2.1 code normalises
-   with the storm's own Vmax (`H_W = h34 + (1 − h34)(V − 34)/(Vmax − 34)`, tail to R_W06,
-   `h34 = 0.2`); confirm the exact form and the tail cut (17 kt or 12 m/s) before
+   2 categories 1–2 (64–95 kt); 3 major hurricane (≥ 96 kt). The v0.2.1 work (branch
+   `avance/v0.2.1-casos`) implements the absolute scale as `wind.hazard_scale:
+   saffir_simpson` with nodes (34, 0.2), (64, 0.4), (96, 0.6), (113, 0.8), (137, 1.0) kt,
+   alongside the Vmax-relative form (`H_W = h34 + (1 − h34)(V − 34)/(Vmax − 34)`, the
+   default in tag v0.2.1); confirm which one and the tail cut (17 kt or 12 m/s) before
    implementing (O13).
 
 ### Why intensity correction is required (O11)

@@ -1,6 +1,6 @@
 # Decision log
 
-Last updated: 2026-11-08. One line per decision; the rationale is in the block documents.
+Last updated: 2026-11-15. One line per decision; the rationale is in the block documents.
 
 ## Decided
 
@@ -30,7 +30,7 @@ Last updated: 2026-11-08. One line per decision; the rationale is in the block d
 | O5 | 1 | Keep or delete the monthly ERA5 GRIB after verification (4.4 TB if kept) | Adolfo, DCSR quota | Campaign |
 | O6 | 2 | Is Stage 2 worth it with a 2.5× factor (0.25° → 0.1°)? Compare against conservative interpolation | Tom | Block 2 training |
 | O7 | 2 | Disable the per-image gamma capping at the 99.5th percentile (it removes TC rain extremes) | Tom | Block 2 preprocessing |
-| O8 | 2 | Splits: Stage 2 perfect-prog on all years; Stage 1 calibrated only out of sample (2023–2025) | Tom | Block 2 training |
+| O8 | 2 | Closed by D17 | — | — |
 | O9 | 2 | DEM outside Mexico (INEGI covers Mexico only): fill with GMTED or ERA5 orography | Adolfo | Block 2 preprocessing |
 | O10 | 2–4 | Precipitation bias: SwAIther correction against observed climatology, or raw AIFS against its own climatology by lead (ITCHI v0.3, P3), or both | Tutor, Tom | Block 4 |
 | O11 | 3 | Intensity correction of AIFS (Emily: ~60 hPa too weak already at t0 in ERA5) | Milton | Block 3 |
@@ -72,6 +72,16 @@ forecast and on SIGTERM (status, counts, failures, NaN/range issues, timings, co
 installed with `--no-deps`); it is built after the campaign. The image chain starts from
 `dawn_containers/AIFS/aifs-ens.sif`, outside this project: checksums are recorded in
 `containers/README.md` and a copy of the v2_era5 image is kept with the campaign outputs.
+
+## Decision agreed earlier with Tom (recorded 2026-11-15)
+
+**D17. Training years and block structure.** AIFS Single v1.1 is pre-trained on ERA5
+1979–2022 and fine-tuned on operational analyses 2016–2022 (Moldovan et al. 2026, GMD 19,
+4703). SwAIther-Precip is trained on years up to 2022, validated on 2023–2024 and tested on
+2025; if those years hold too few TC cases, some in-sample years are used for validation.
+The wind hazard model needs feature selection (few samples), diagnosed on the validation
+years. Blocks 2 and 3 are parallel: SwAIther outputs are not inputs to the wind model.
+WeatherNext 3 (historical forecasts from 2024) is the external comparison on 2024–2025.
 
 ### Notes for open questions (2026-11-12)
 

@@ -66,10 +66,10 @@ return periods used by Block 4.
 
 1. **Do not cap extremes.** Disable the gamma capping: it removes TC rain, and MSWEP has
    no radar artefacts.
-2. **Splits by complete years.** Windows overlap between cycles, so weekly splits leak.
-   Stage 2 trained in perfect-prog (degraded MSWEP → MSWEP) on all years; Stage 1
-   calibrated only on out-of-sample seasons (2023–2025). Replace the "last two years"
-   rule of `train_yearly.py` with explicit year lists.
+2. **Splits by complete years (agreed, D17).** Windows overlap between cycles, so weekly
+   splits leak. Train up to 2022, validate on 2023–2024, test on 2025; replace the "last two
+   years" rule of `train_yearly.py` with explicit year lists. Stage 2 can still be trained
+   in perfect-prog (degraded MSWEP → MSWEP) on the training years.
 3. **Stage 2 value.** The factor is only 2.5 (0.25° → 0.1°), against ~25 in Switzerland;
    keep Stage 2 only if it beats conservative interpolation.
 4. **Forecast bias and ITCHI.** ITCHI v0.3 (P3) corrects forecast bias with the model's own
