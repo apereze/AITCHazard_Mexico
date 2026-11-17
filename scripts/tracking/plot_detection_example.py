@@ -69,7 +69,7 @@ def read_ibtracs(paths, t0, t1):
     for p in paths:
         df = pd.read_csv(p, skiprows=[1], low_memory=False, na_values=[" ", ""], keep_default_na=False)
         df["time"] = pd.to_datetime(df["ISO_TIME"])
-        df = df[(df["time"] >= t0) & (df["time"] <= t1) & (df["time"].dt.hour % 6 == 0)]
+        df = df[(df["time"] >= t0) & (df["time"] <= t1) & (df["time"].dt.hour % 6 == 0) & (df["time"].dt.minute == 0)]
         frames.append(df)
     df = pd.concat(frames).drop_duplicates(subset=["SID", "ISO_TIME"])
     for c in ["LAT", "LON", "USA_WIND", "USA_PRES", "WMO_WIND", "WMO_PRES"]:
@@ -96,6 +96,21 @@ def pair_tracks(tracks, best, max_km):
         else:
             pairs.append((tr, None, cand[0][0] if cand else np.nan))
     return pairs
+
+
+def add_land_shp(ax, path):
+    """Land polygons from a Natural Earth shapefile (e.g. ne_50m_land.shp), read with pyshp."""
+    try:
+        import shapefile
+        for shp in shapefile.Reader(path).shapes():
+            pts = np.asarray(shp.points)
+            idx = list(shp.parts) + [len(pts)]
+            for i0, i1 in zip(idx[:-1], idx[1:]):
+                ax.fill(pts[i0:i1, 0], pts[i0:i1, 1], facecolor="#ecebe6", edgecolor="#8a8a85", lw=0.6, zorder=0)
+        return True
+    except Exception as e:  # optional layer
+        print(f"[coast] not drawn: {e}")
+        return False
 
 
 def add_coast(ax, nc, var):
@@ -127,6 +142,7 @@ def main():
     ap.add_argument("--margin", type=float, default=6.5, help="closed-contour radius (deg) to show inner edge")
     ap.add_argument("--coast-nc", default=None, help="NetCDF with a land-sea mask (e.g. emily_00_time.nc)")
     ap.add_argument("--coast-var", default="lsm")
+    ap.add_argument("--land-shp", default=None, help="Natural Earth land shapefile (preferred over --coast-nc)")
     ap.add_argument("--zoom-pad", type=float, default=8.0, help="map padding (deg) around tracks; large = full domain")
     ap.add_argument("--title", default="")
     ap.add_argument("--out", required=True)
@@ -159,7 +175,9 @@ def main():
 
     la0, la1, lo0, lo1 = (float(v) for v in a.domain.split(","))
     lo0, lo1 = float(to180(lo0)), float(to180(lo1))
-    if a.coast_nc:
+    if a.land_shp:
+        add_land_shp(ax_m, a.land_shp)
+    elif a.coast_nc:
         add_coast(ax_m, a.coast_nc, a.coast_var)
     ax_m.plot([lo0, lo1, lo1, lo0, lo0], [la0, la0, la1, la1, la0], color="#8a8a85", lw=1.0, zorder=2)
     m = a.margin
@@ -208,8 +226,13 @@ def main():
     handles = [Line2D([], [], color="#2b2b29", ls="-", marker="o", ms=4, lw=2, label="AIFS + TempestExtremes"),
                Line2D([], [], color="#2b2b29", ls="--", marker="o", ms=4, mfc="white", lw=1.5, label="IBTrACS"),
                Line2D([], [], color="#2b2b29", marker="o", ms=9, mec="white", mew=2, ls="", label="t0"),
-               Line2D([], [], color="#8a8a85", lw=1.0, label="dominio"),
-               Line2D([], [], color="#8a8a85", lw=0.8, ls=":", label=f"borde − {a.margin:g}°")]
+               ]
+    xl, yl = ax_m.get_xlim(), ax_m.get_ylim()
+    vis = lambda x0, x1, y0, y1: (xl[0] < x0 < xl[1] or xl[0] < x1 < xl[1] or yl[0] < y0 < yl[1] or yl[0] < y1 < yl[1])
+    if vis(lo0, lo1, la0, la1):
+        handles.append(Line2D([], [], color="#8a8a85", lw=1.0, label="dominio"))
+    if vis(lo0 + m, lo1 - m, la0 + m, la1 - m):
+        handles.append(Line2D([], [], color="#8a8a85", lw=0.8, ls=":", label=f"dominio − {a.margin:g}° (contorno)"))
     ax_m.legend(handles=handles, loc="lower left", fontsize=9, frameon=True, framealpha=0.9)
     fig.suptitle(a.title, fontsize=13, x=0.01, ha="left")
     ax_w.annotate("IBTrACS: viento sostenido 1 min (USA_WIND)\nAIFS: máximo de |v10| en 2°, malla 0.25°",
