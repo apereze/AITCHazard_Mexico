@@ -16,19 +16,28 @@ References: TCBench ([Gomez et al. 2026](https://arxiv.org/abs/2601.23268); code
   Block 1 extended domain (decision D10).
 - Outputs per forecast: centre, track, Vmax and Pmin.
 
-## Parameters (TCBench table 2; verify in their `track_processing` code)
+## Parameters (same as Ullrich et al. 2021, except the 12 h minimum duration)
 
-| Criterion | Value |
-|---|---|
-| MSLP closed contour | 200 Pa within 6.5° |
-| Warm core | z300 − z500 contour −58.8 m² s⁻² within 5.5°, at most 1.0° from the centre |
-| Minimum duration | 12 h (3 nodes at 6 h) |
-| Wind | Vmax ≥ 10 m s⁻¹ |
-| Latitude | \|lat\| ≤ 50° |
-| Topography filter | none |
+Confirmed 2026-11-16: TCBench uses the MSLP contour within 5.5° and the warm core within
+6.5°, as Ullrich et al. (2021). The extracted text of TCBench table 2 shows them swapped;
+`te_month.sh` used the swapped radii until 2026-11-16 (controls rerun after the fix).
 
-To check in the TCBench code: how the wind threshold is counted, `--range`, `--maxgap`,
-and the 6.5°/5.5° inversion relative to Ullrich et al. (2021).
+| Criterion | TCBench | Ullrich et al. (2021) | `te_month.sh` |
+|---|---|---|---|
+| MSLP closed contour | 200 Pa within 5.5° | same | same |
+| Warm core | z300 − z500 contour −58.8 m² s⁻² within 6.5°, at most 1.0° from the centre | same | same |
+| Merge distance | not stated | 6.0° | 6.0° |
+| StitchNodes `--range` | not stated | 8.0° | 5.0° (default) |
+| Minimum duration | 12 h | 54 h | 3 nodes (12 h) |
+| `--maxgap` | not stated | 24 h | 0 (default) |
+| Wind ≥ 10 m s⁻¹ | yes, count not stated | in ≥ 10 steps | in ≥ 1 step |
+| \|lat\| ≤ 50° | yes | in ≥ 10 steps | not needed (domain ≤ 45°N) |
+| Surface elevation ≤ 150 m | not listed | in ≥ 10 steps | none |
+| IBTrACS matching | HuracanPy, criteria not published | — | not implemented |
+
+To ask Milton: `--range`, `--maxgap`, the wind threshold count, a topography filter for the
+Sierra Madre that keeps tracks after landfall, the HuracanPy matching criteria, and whether
+the TCBench `track_processing` code can be reused directly.
 
 ## TempestExtremes options (checked in the code, commit of 2026-08-10)
 

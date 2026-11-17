@@ -1,7 +1,9 @@
 #!/bin/bash
 # DetectNodes + StitchNodes on every Block 1 tempest file of one month (one forecast per file).
-# Parameters: TCBench table 2 (docs/tracking-tcbench.md, D10); range, maxgap and the wind
-# threshold are provisional until checked in the TCBench track_processing code.
+# Parameters: TCBench (D10), same radii as Ullrich et al. 2021: MSLP contour within 5.5 deg,
+# warm core within 6.5 deg (the radii appear swapped in the extracted TCBench table 2).
+# range, maxgap and the wind threshold count are provisional until checked in the TCBench
+# track_processing code.
 # Candidates kept >= 6.5 deg inside the stored domain -5..45 N, 220..310 E (O3).
 # Usage (CPU node): bash scripts/tracking/te_month.sh 2023 05
 source ~/.aitchazard_env
@@ -17,7 +19,7 @@ for f in "$IN"/aifs11_tempest_*.nc; do
   b=$(basename "$f" .nc); n=$((n + 1))
   "$BIN/DetectNodes" --in_data "$f" --out "$OUT/${b}_nodes.txt" --regional \
     --latname latitude --lonname longitude --searchbymin msl \
-    --closedcontourcmd "msl,200.0,6.5,0;_DIFF(z_300,z_500),-58.8,5.5,1.0" \
+    --closedcontourcmd "msl,200.0,5.5,0;_DIFF(z_300,z_500),-58.8,6.5,1.0" \
     --mergedist 6.0 --outputcmd "msl,min,0;_VECMAG(u10,v10),max,2" \
     --minlat 1.5 --maxlat 38.5 --minlon 226.5 --maxlon 303.5 > "$OUT/${b}_dn.log" 2>&1
   "$BIN/StitchNodes" --in "$OUT/${b}_nodes.txt" --out "$OUT/${b}_tracks.txt" \

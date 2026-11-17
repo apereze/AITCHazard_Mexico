@@ -9,8 +9,8 @@ tracking:
   fields: [msl, 10u, 10v, z_300, z_500, zs]
   detect_nodes:
     regional: true
-    mslp_closed_contour: {delta_pa: 200.0, distance_deg: 6.5}
-    thickness_closed_contour: {expression: "_DIFF(z_300,z_500)", delta_m2s2: -58.8, distance_deg: 5.5, max_distance_deg: 1.0}
+    mslp_closed_contour: {delta_pa: 200.0, distance_deg: 5.5}
+    thickness_closed_contour: {expression: "_DIFF(z_300,z_500)", delta_m2s2: -58.8, distance_deg: 6.5, max_distance_deg: 1.0}
     wind: "_VECMAG(u10,v10)"
   stitch_nodes:
     min_time: 12h                  # 3 nodes at 6 h
