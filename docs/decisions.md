@@ -20,17 +20,19 @@ Last updated: 2026-11-18. One line per decision; the rationale is in the block d
 | D12 | 3–4 | AIFS outputs are converted into ITCHI inputs (track table + 6 h precipitation) so ITCHI can be computed per lead time | 2026-11-08 |
 | D18 | All | AIFS v1.1 with ERA5 initial conditions is a proof of concept, not a claim of operational skill (Tom, `docs/meetings/2026-11-16_tom.md`) | 2026-11-16 |
 | D19 | All | Central argument: the lightweight nature of the end-to-end high-resolution hazard forecasting system | 2026-11-16 |
-| D20 | 1, 3 | Extra variables (closes O4): T850 (already stored) and u, v at 1000, 850, 500 and 300 hPa, as Tom listed; u, v at 200 hPa (850–200 hPa shear) and `sp` are also stored, 200 hPa pending Tom's confirmation; 100u/100v not added | 2026-11-16 |
+| D20 | 1, 3 | Extra variables (closes O4): T850 (already stored) and u, v at 1000, 850, 500 and 300 hPa, as Tom listed; u, v at 200 hPa (850–200 hPa shear) and `sp` are also stored (confirmed by Tom); 100u/100v not added | 2026-11-16 |
 | D21 | 3 | Predictor selection is justified with arXiv:2510.02050, appendix included | 2026-11-16 |
 | D22 | 2–4 | Precipitation bias (closes O10), staged: baseline = raw AIFS `tp` ranked against its own climatology by lead time (no correction in mm), used for the first forecast ITCHI (John 2024, tutorial meeting 2026-12-03); target = SwAIther-Precip retrained for Mexico, evaluated against the baseline. Before adopting the baseline, check on 2023 that high AIFS ranks match MSWEP P95 exceedances (reliability or Brier score by lead) | 2026-11-18 |
 | D23 | 4 | Antecedent window A72 (closes O14): MSWEP up to t0, AIFS after t0, no weighting; MSWEP latency accepted under D18 | 2026-11-18 |
 | D24 | Tracking | Tracking parameters follow the TCBench example (`dev/TempestExtremes_example.sh`, github.com/msgomez06/tcbench): DetectNodes `--mergedist 6.0`; StitchNodes `--range 8.0 --mintime 12h --threshold "wind10,>=,10.0,2;lat,<=,50.0,1;lat,>=,-50.0,1"`, no `--maxgap` (default 0), no topography filter; matching to IBTrACS with `huracanpy.assess.match` (`dev/track_matcher.py`). Replaces the control settings (`--range 5.0`, wind in 1 step); details of D10 | 2026-11-18 |
+| D25 | 3 | Wind hazard normalisation (closes O13): as in itchi-core v0.3.0, the v0.2.2 scheme agreed after the v0.2.1 progress report: Saffir-Simpson nodes (34, 0.2), (64, 0.4), (83, 0.6), (96, 0.8), (137, 1.0) kt and tail cut at 12 m/s (`constants.SAFFIR_SIMPSON_HAZARD_NODES`, `TAIL_END_WIND_MS`). AITCHazard pins itchi-core `v0.3.0` | 2026-11-18 |
+| D26 | 1 | Full campaign 2000–2025 (closes O1; approved by Tom): 2024 and 2025 next, then 2000–2022 | 2026-11-18 |
 
 ## Open
 
 | ID | Block | Question | Who decides | Needed before |
 |---|---|---|---|---|
-| O1 | 1 | Run 2023–2025 (out of sample, ~10 GPU-h) first? | Tom | Campaign |
+| O1 | 1 | Closed by D26 | — | — |
 | O2 | 1 | Output layout: `split` (0.51 TB) or `single` (0.65 TB) | Adolfo | Campaign |
 | O3 | 1 | Eastern edge of the extended domain: 310°E or 330°E (+0.14 TB) | Milton | Campaign |
 | O4 | 1 | Closed by D20 | — | — |
@@ -42,7 +44,7 @@ Last updated: 2026-11-18. One line per decision; the rationale is in the block d
 | O10 | 2–4 | Closed by D22 (decision delegated to Adolfo by the tutor, 2026-11-17) | — | — |
 | O11 | 3 | Intensity correction of AIFS (Emily: ~60 hPa too weak already at t0 in ERA5) | Milton | Block 3 |
 | O12 | 3 | R34 per quadrant: from the AIFS 10 m wind field or parametric (PA21) from corrected Vmax | Milton, tutor | Block 3 |
-| O13 | 3 | Exact Saffir-Simpson normalisation and tail cut (17 kt or 12 m/s) as in ITCHI v0.3 | Tutor | Block 3 |
+| O13 | 3 | Closed by D25 | — | — |
 | O14 | 4 | Closed by D23 | — | — |
 | O15 | Tracking | Genesis inside the 72 h window; spurious minima over high terrain at landfall | Milton | Tracking evaluation |
 | O16 | 1 | Subset with operational initial conditions to measure the ERA5 → operational shift | Tom | Optional |

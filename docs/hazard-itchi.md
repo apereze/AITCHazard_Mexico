@@ -1,10 +1,10 @@
 # Blocks 3 and 4 · Wind hazard and forecast ITCHI
 
-Last updated: 2026-11-08. Status: scheme decided (follow ITCHI); intensity correction and
+Last updated: 2026-11-18. Status: scheme decided (follow ITCHI); intensity correction and
 exact wind normalisation open. No code yet.
 
 Reference implementation: [`apereze/itchi-core`](https://github.com/apereze/itchi-core),
-tag `v0.2.1` (2026-10-30), and its v0.3 plan (`contexto_itchi_v0.3.md`). Read those before
+tag `v0.3.0` (2026-11-18; the v0.2.2 scheme, see its CHANGELOG), and its v0.3 plan (`contexto_itchi_v0.3.md`). Read those before
 coding; this document only fixes what AITCHazard must produce for them.
 
 ## ITCHI in one paragraph
@@ -45,6 +45,8 @@ Scheme:
    alongside the Vmax-relative form (`H_W = h34 + (1 − h34)(V − 34)/(Vmax − 34)`, the
    default in tag v0.2.1); confirm which one and the tail cut (17 kt or 12 m/s) before
    implementing (O13).
+   **Resolved (D25):** itchi-core v0.3.0 keeps only the absolute scale, with nodes
+   (34, 0.2), (64, 0.4), (83, 0.6), (96, 0.8), (137, 1.0) kt and the tail cut at 12 m/s.
 
 ### Why intensity correction is required (O11)
 
