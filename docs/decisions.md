@@ -1,6 +1,6 @@
 # Decision log
 
-Last updated: 2026-11-15. One line per decision; the rationale is in the block documents.
+Last updated: 2026-11-18. One line per decision; the rationale is in the block documents.
 
 ## Decided
 
@@ -18,6 +18,13 @@ Last updated: 2026-11-15. One line per decision; the rationale is in the block d
 | D10 | Tracking | TempestExtremes with the fields and parameters of TCBench (Gomez et al. 2026): msl, 10u, 10v, z300, z500 (+ zs); systems present at t0, matched to IBTrACS; minimum duration 12 h | 2026-11-08 |
 | D11 | 3 | Wind hazard follows ITCHI: Willoughby et al. (2006) profile per quadrant, outer limit where the wind falls to 2 m/s (R_W06, Pérez-Alarcón et al. 2021), hazard normalised to Saffir-Simpson categories | 2026-11-08 |
 | D12 | 3–4 | AIFS outputs are converted into ITCHI inputs (track table + 6 h precipitation) so ITCHI can be computed per lead time | 2026-11-08 |
+| D18 | All | AIFS v1.1 with ERA5 initial conditions is a proof of concept, not a claim of operational skill (Tom, `docs/meetings/2026-11-16_tom.md`) | 2026-11-16 |
+| D19 | All | Central argument: the lightweight nature of the end-to-end high-resolution hazard forecasting system | 2026-11-16 |
+| D20 | 1, 3 | Extra variables (closes O4): T850 (already stored) and u, v at 1000, 850, 500 and 300 hPa, as Tom listed; u, v at 200 hPa (850–200 hPa shear) and `sp` are also stored, 200 hPa pending Tom's confirmation; 100u/100v not added | 2026-11-16 |
+| D21 | 3 | Predictor selection is justified with arXiv:2510.02050, appendix included | 2026-11-16 |
+| D22 | 2–4 | Precipitation bias (closes O10), staged: baseline = raw AIFS `tp` ranked against its own climatology by lead time (no correction in mm), used for the first forecast ITCHI (John 2024, tutorial meeting 2026-12-03); target = SwAIther-Precip retrained for Mexico, evaluated against the baseline. Before adopting the baseline, check on 2023 that high AIFS ranks match MSWEP P95 exceedances (reliability or Brier score by lead) | 2026-11-18 |
+| D23 | 4 | Antecedent window A72 (closes O14): MSWEP up to t0, AIFS after t0, no weighting; MSWEP latency accepted under D18 | 2026-11-18 |
+| D24 | Tracking | Tracking parameters follow the TCBench example (`dev/TempestExtremes_example.sh`, github.com/msgomez06/tcbench): DetectNodes `--mergedist 6.0`; StitchNodes `--range 8.0 --mintime 12h --threshold "wind10,>=,10.0,2;lat,<=,50.0,1;lat,>=,-50.0,1"`, no `--maxgap` (default 0), no topography filter; matching to IBTrACS with `huracanpy.assess.match` (`dev/track_matcher.py`). Replaces the control settings (`--range 5.0`, wind in 1 step); details of D10 | 2026-11-18 |
 
 ## Open
 
@@ -26,19 +33,21 @@ Last updated: 2026-11-15. One line per decision; the rationale is in the block d
 | O1 | 1 | Run 2023–2025 (out of sample, ~10 GPU-h) first? | Tom | Campaign |
 | O2 | 1 | Output layout: `split` (0.51 TB) or `single` (0.65 TB) | Adolfo | Campaign |
 | O3 | 1 | Eastern edge of the extended domain: 310°E or 330°E (+0.14 TB) | Milton | Campaign |
-| O4 | 1 | Extra variables for Block 3 (u/v at 200 and 850 hPa for shear, 100u/100v) | Tom, Milton | Campaign (cannot be added later without rerunning) |
+| O4 | 1 | Closed by D20 | — | — |
 | O5 | 1 | Keep or delete the monthly ERA5 GRIB after verification (4.4 TB if kept) | Adolfo, DCSR quota | Campaign |
 | O6 | 2 | Is Stage 2 worth it with a 2.5× factor (0.25° → 0.1°)? Compare against conservative interpolation | Tom | Block 2 training |
 | O7 | 2 | Disable the per-image gamma capping at the 99.5th percentile (it removes TC rain extremes) | Tom | Block 2 preprocessing |
 | O8 | 2 | Closed by D17 | — | — |
 | O9 | 2 | DEM outside Mexico (INEGI covers Mexico only): fill with GMTED or ERA5 orography | Adolfo | Block 2 preprocessing |
-| O10 | 2–4 | Precipitation bias: SwAIther correction against observed climatology, or raw AIFS against its own climatology by lead (ITCHI v0.3, P3), or both | Tutor, Tom | Block 4 |
+| O10 | 2–4 | Closed by D22 (decision delegated to Adolfo by the tutor, 2026-11-17) | — | — |
 | O11 | 3 | Intensity correction of AIFS (Emily: ~60 hPa too weak already at t0 in ERA5) | Milton | Block 3 |
 | O12 | 3 | R34 per quadrant: from the AIFS 10 m wind field or parametric (PA21) from corrected Vmax | Milton, tutor | Block 3 |
 | O13 | 3 | Exact Saffir-Simpson normalisation and tail cut (17 kt or 12 m/s) as in ITCHI v0.3 | Tutor | Block 3 |
-| O14 | 4 | Antecedent window A72 mixes observed MSWEP (before t0) and forecast (after t0) | Tutor | Block 4 |
+| O14 | 4 | Closed by D23 | — | — |
 | O15 | Tracking | Genesis inside the 72 h window; spurious minima over high terrain at landfall | Milton | Tracking evaluation |
 | O16 | 1 | Subset with operational initial conditions to measure the ERA5 → operational shift | Tom | Optional |
+| O17 | 2 | ITCHI in the SwAIther-Precip loss to mitigate its limitations (arXiv:2605.16163, sec. 6b) | Tom | Block 2 training |
+| O18 | Tracking | Split tracks when a TC weakens over land and regenerates (John 2024) with `--maxgap 0`: allow a gap or merge segments matched to the same IBTrACS SID | Milton | Tracking evaluation |
 
 ## Decisions of 2026-11-12 (Block 1 production)
 
