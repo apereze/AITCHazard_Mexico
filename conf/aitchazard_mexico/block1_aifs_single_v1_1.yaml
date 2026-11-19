@@ -1,5 +1,5 @@
 # Block 1: AIFS Single v1.1 retrospective forecasts initialised from ERA5 (CDS).
-# Documentation: docs/block1-aifs.md. Decisions: docs/decisions.md (D1-D7, O1-O5).
+# Documentation: docs/block1-aifs.md. Decisions: docs/decisions.md (D1-D7, D13-D16, D20; O2, O3, O5).
 
 paths:
   base: /work/FAC/FGSE/IDYST/tbeucler/default/apereze
@@ -52,11 +52,12 @@ output:
   per_step: [tp, cp]          # 6 h per step (verified 2026-11-08); NaN at t0
   t0_source: era5             # runner.run does not yield t0
   domains:
-    # SwAIther-Precip inputs (11 channels)
+    # SwAIther-Precip inputs (11 channels) + D20 (Blocks 2-3): u, v at 1000/850/500/300/200 hPa and sp
     regional:
       lat: [5.0, 35.0]
       lon: [230.0, 300.0]     # 0-360 convention
-      variables: [tp, cp, tcc, 10u, 10v, q_500, q_850, t_500, t_850, z_500, z_850]
+      variables: [tp, cp, tcc, 10u, 10v, q_500, q_850, t_500, t_850, z_500, z_850,
+                  u_1000, v_1000, u_850, v_850, u_500, v_500, u_300, v_300, u_200, v_200, sp]
     # TempestExtremes inputs (fields of Gomez et al. 2026, TCBench); buffer for 6.5 deg contours
     tempest:
       lat: [-5.0, 45.0]
@@ -65,8 +66,8 @@ output:
   static:
     # Written once per domain: zs = z_sfc / g (m), lsm (0-1)
     variables: [zs, lsm]
-  # Open decision O4, must be fixed BEFORE the campaign:
-  # optional_variables: [u_200, v_200, u_850, v_850, 100u, 100v]
+  # O4 closed by D20 (2026-11-16): extra variables in the regional domain; 100u/100v not added.
+  # Forecasts written before D20 (2023) lack them and must be rerun.
 
 slurm:
   # Proposed per year-month task (benchmark 2026-11-08: 0.44 h per task)
