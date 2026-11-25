@@ -110,3 +110,21 @@ WeatherNext 3 (historical forecasts from 2024) is the external comparison on 202
 - **Resources.** Smoke test with `--cpus-per-task=2 --mem=16G`: 13.1 s per forecast after the
   first (53.8 s, includes lazy checkpoint load, CUDA initialisation and the first scan of the
   monthly GRIB), RSS peak 5.6 GiB, VRAM peak 20.7 GiB. Final values from the 2023-05 pilot.
+
+## 2026-11-25
+
+- **D20 (enmienda).** Criterio de revisión: sin NaN salvo `tp`, `cp` y `tcc` en el plazo 0 (no están en las
+  entradas de ERA5).
+- **D24 (nota).** Confirmado con M. Gómez: lo que no está en `TempestExtremes_example.sh` de TCBench usa los valores
+  predeterminados de TempestExtremes (sin filtro de topografía, `maxgap` 0). El viento del modelo se divide entre 0.88
+  y IBTrACS se deja en sus valores originales; es una convención, no una corrección física. Aplicado en `te_month.sh`
+  (`--range 8.0`, viento ≥ 10 m/s en 2 nodos).
+- **D27.** Variables regionales para la corrección de intensidad (campos centrados en la tormenta de AIFS-TC, Allen
+  et al. 2026, arXiv:2608.09959): u, v, t, z, q en 700 hPa; t, z, q en 200 hPa (30 variables). Desde AIFS 2025 y
+  2000–2022; 2023–2024 (22 variables) se repiten al final de la campaña. El código y los pesos de AIFS-TC no están
+  publicados todavía (cambridge-mlg/aifs-tc, 25 nov 2026).
+- **O19 (abierta). Corrección de intensidad, prueba piloto 2023–2024** (itchi-core `notebooks/v03/14` y `15`):
+  sesgo de AIFS −27 kt en t0 y −33 kt a 48 h; la regresión lineal por cuantiles (Vmax de AIFS, Vmax observado en t0,
+  plazo) baja el MAE a 48 h de 33 a 17 kt, con cobertura 0.1–0.9 de ~0.78; los predictores ambientales y el potencial
+  de intensificación no mejoran de forma clara; H3–H5 quedan en ~−30 kt a 48 h. Decidir con Tom (7 dic) el modelo
+  para 2000–2022.
