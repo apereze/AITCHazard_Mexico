@@ -15,6 +15,7 @@ Outputs (--out-dir):
   matches_long.csv  one row per matched track and lead (0..72 h, 6 h) where forecast or observation exists
   tracks.csv        one row per track: match type, storm, distance at match, first/last lead
   inits.csv         one row per initialisation: tracks, storms at t0 (all / NATURE == TS), hits, misses
+  misses.csv        one row per storm at t0 (inside the search box) not matched: intensity, position, NATURE
 
 Usage (Curnagl, inside the AIFS container; numpy + pandas only):
   python scripts/tracking/match_tracks_ibtracs.py --years 2023 2024 \
@@ -134,7 +135,7 @@ def main():
     ib_s = {s: g.set_index("t") for s, g in ib.groupby("SID")}
     print(f"IBTrACS: {ib['SID'].nunique()} storms in {a.years}, provisional rows: {int(ib['provisional'].sum())}")
 
-    rows, trows, irows = [], [], []
+    rows, trows, irows, mrows = [], [], [], []
     for y in a.years:
         for m in a.months:
             files = sorted((a.tracks_root / f"{y}" / f"{m:02d}").glob("aifs11_tempest_*_tracks.txt"))
@@ -153,6 +154,11 @@ def main():
                                   late=sum(v[2] == "late" for v in pairs.values()),
                                   unmatched=len(tracks) - len(pairs),
                                   missed=";".join(ib_s[s]["name"].iloc[0] for s in missed)))
+                if len(s0):
+                    for _, ms in s0[s0["SID"].isin(missed)].iterrows():
+                        mrows.append(dict(init=ini, SID=ms["SID"], name=ms["name"], basin=ms["basin"],
+                                          nature=ms["nature"], vmax_kt=ms["vmax_kt"], pres_hPa=ms["pres_hPa"],
+                                          lon=ms["lon"], lat=ms["lat"]))
                 for k, tr in enumerate(tracks):
                     lead = (tr.index - ini) / pd.Timedelta(hours=1)
                     sid, d, mtype, tm = pairs.get(k, (None, np.nan, "none", pd.NaT))
@@ -193,11 +199,12 @@ def main():
                         rows.append(r)
 
     long, trk, inits = pd.DataFrame(rows), pd.DataFrame(trows), pd.DataFrame(irows)
+    misses = pd.DataFrame(mrows, columns=["init", "SID", "name", "basin", "nature", "vmax_kt", "pres_hPa", "lon", "lat"])
     if long.empty:
         raise SystemExit("no matched tracks")
     long["err_vmax_kt"] = long["fc_vmax_kt"] - long["ob_vmax_kt"]
     long["err_pres_hPa"] = long["fc_msl_hPa"] - long["ob_pres_hPa"]
-    for name, df in (("matches_long", long), ("tracks", trk), ("inits", inits)):
+    for name, df in (("matches_long", long), ("tracks", trk), ("inits", inits), ("misses", misses)):
         df.to_csv(a.out_dir / f"{name}.csv", index=False, float_format="%.3f")
 
     # Console summary
@@ -215,7 +222,7 @@ def main():
                                  pres_bias_hPa=("err_pres_hPa", "mean"), n_storms=("SID", "nunique"))
     print("\nt0 matches, NATURE TS at the valid time, error by lead (fc - obs; wind /0.88):")
     print(g.round(1).to_string())
-    print(f"\nsaved {a.out_dir}/matches_long.csv, tracks.csv, inits.csv")
+    print(f"\nsaved {a.out_dir}/matches_long.csv, tracks.csv, inits.csv, misses.csv")
 
 
 if __name__ == "__main__":
