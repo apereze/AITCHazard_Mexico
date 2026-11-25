@@ -19,10 +19,14 @@ LAT = 90.0 - RES * np.arange(721)  # N -> S
 LON = RES * np.arange(1440)        # 0-360
 # D20: wind at the pressure levels of the regional domain (Blocks 2-3)
 PL_WIND = tuple(f"{c}_{p}" for p in (1000, 850, 500, 300, 200) for c in ("u", "v"))
+# D27: storm-centred fields of AIFS-TC (Allen et al. 2026, arXiv:2608.09959) at 850/700/500/200 hPa;
+# the levels missing from D20 are added to UNITS and RANGES (u, v, t, z, q at 700; t, z, q at 200)
 UNITS = {"tp": "m", "cp": "m", "tcc": "1", "10u": "m s-1", "10v": "m s-1", "msl": "Pa", "sp": "Pa",
          "q_500": "kg kg-1", "q_850": "kg kg-1", "t_500": "K", "t_850": "K",
          "z_300": "m2 s-2", "z_500": "m2 s-2", "z_850": "m2 s-2", "zs": "m", "lsm": "1",
-         **{v: "m s-1" for v in PL_WIND}}
+         **{v: "m s-1" for v in PL_WIND},
+         "u_700": "m s-1", "v_700": "m s-1", "t_700": "K", "t_200": "K",
+         "z_700": "m2 s-2", "z_200": "m2 s-2", "q_700": "kg kg-1", "q_200": "kg kg-1"}
 NC_NAME = {"10u": "u10", "10v": "v10"}
 NAN_AT_T0 = ("tp", "cp", "tcc")  # not in the ERA5 inputs: NaN at lead_time 0
 
@@ -33,6 +37,8 @@ RANGES = {
     "t_500": (200.0, 300.0), "t_850": (200.0, 330.0), "q_500": (0.0, 0.03), "q_850": (0.0, 0.04),
     "z_300": (7.0e4, 1.0e5), "z_500": (4.5e4, 6.2e4), "z_850": (8.0e3, 1.8e4),
     "sp": (4.5e4, 1.09e5), **{v: (-150.0, 150.0) for v in PL_WIND},
+    "u_700": (-150.0, 150.0), "v_700": (-150.0, 150.0), "t_700": (220.0, 320.0), "t_200": (190.0, 250.0),
+    "z_700": (2.5e4, 3.4e4), "z_200": (1.05e5, 1.30e5), "q_700": (0.0, 0.03), "q_200": (0.0, 0.002),
 }
 COORD_ENC = {"latitude": {"_FillValue": None}, "longitude": {"_FillValue": None}}
 

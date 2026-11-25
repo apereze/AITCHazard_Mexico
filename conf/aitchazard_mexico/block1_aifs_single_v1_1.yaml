@@ -53,11 +53,13 @@ output:
   t0_source: era5             # runner.run does not yield t0
   domains:
     # SwAIther-Precip inputs (11 channels) + D20 (Blocks 2-3): u, v at 1000/850/500/300/200 hPa and sp
+    # + D27 (intensity correction, AIFS-TC fields): u, v, t, z, q at 700 hPa; t, z, q at 200 hPa
     regional:
       lat: [5.0, 35.0]
       lon: [230.0, 300.0]     # 0-360 convention
       variables: [tp, cp, tcc, 10u, 10v, q_500, q_850, t_500, t_850, z_500, z_850,
-                  u_1000, v_1000, u_850, v_850, u_500, v_500, u_300, v_300, u_200, v_200, sp]
+                  u_1000, v_1000, u_850, v_850, u_500, v_500, u_300, v_300, u_200, v_200, sp,
+                  u_700, v_700, t_700, z_700, q_700, t_200, z_200, q_200]
     # TempestExtremes inputs (fields of Gomez et al. 2026, TCBench); buffer for 6.5 deg contours
     tempest:
       lat: [-5.0, 45.0]
@@ -68,6 +70,7 @@ output:
     variables: [zs, lsm]
   # O4 closed by D20 (2026-11-16): extra variables in the regional domain; 100u/100v not added.
   # Forecasts written before D20 (2023) lack them and must be rerun.
+  # D27 (2026-11-25): 8 more regional variables (30 in total); 2023-2024 written with 22 are rerun at the end.
 
 slurm:
   # Proposed per year-month task (benchmark 2026-11-08: 0.44 h per task)
