@@ -1,9 +1,10 @@
 #!/bin/bash
 # DetectNodes + StitchNodes on every Block 1 tempest file of one month (one forecast per file).
-# Parameters: TCBench (D10), same radii as Ullrich et al. 2021: MSLP contour within 5.5 deg,
-# warm core within 6.5 deg (the radii appear swapped in the extracted TCBench table 2).
-# range, maxgap and the wind threshold count are provisional until checked in the TCBench
-# track_processing code.
+# Parameters: TCBench TempestExtremes_example.sh (D24); every option not in that script keeps the
+# TempestExtremes default (confirmed by M. Gomez, 2026-11-25): no topography filter, maxgap 0 (written
+# explicitly, same as the default). Radii as Ullrich et al. 2021: MSLP contour within 5.5 deg, warm core
+# within 6.5 deg (the radii appear swapped in the extracted TCBench table 2).
+# StitchNodes: range 8 deg per 6 h, >= 3 nodes (12 h at 6-h steps), wind >= 10 m/s in >= 2 nodes.
 # Candidates kept >= 6.5 deg inside the stored domain -5..45 N, 220..310 E (O3).
 # Usage (CPU node): bash scripts/tracking/te_month.sh 2023 05
 source ~/.aitchazard_env
@@ -23,8 +24,8 @@ for f in "$IN"/aifs11_tempest_*.nc; do
     --mergedist 6.0 --outputcmd "msl,min,0;_VECMAG(u10,v10),max,2" \
     --minlat 1.5 --maxlat 38.5 --minlon 226.5 --maxlon 303.5 > "$OUT/${b}_dn.log" 2>&1
   "$BIN/StitchNodes" --in "$OUT/${b}_nodes.txt" --out "$OUT/${b}_tracks.txt" \
-    --in_fmt "lon,lat,msl,wind" --range 5.0 --mintime 3 --maxgap 0 \
-    --threshold "wind,>=,10.0,1" > "$OUT/${b}_sn.log" 2>&1
+    --in_fmt "lon,lat,msl,wind" --range 8.0 --mintime 3 --maxgap 0 \
+    --threshold "wind,>=,10.0,2" > "$OUT/${b}_sn.log" 2>&1
 done
 # First point of every track: init, lon, lat, msl (Pa), wind (m/s), valid date
 awk '/^start/{getline; split(FILENAME, a, "aifs11_tempest_"); print substr(a[2], 1, 10), $3, $4, $5, $6, $7"-"$8"-"$9"_"$10}' \
